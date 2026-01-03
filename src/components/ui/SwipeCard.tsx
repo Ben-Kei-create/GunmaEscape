@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useGameStore } from '../../stores/gameStore';
 import type { CardEvent } from '../../types';
-import scenariosData from '../../assets/data/scenarios.json';
 import { ScenarioManager } from '../../systems/ScenarioManager';
 
 interface SwipeCardProps {
@@ -72,7 +71,9 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
           [{card.type.toUpperCase()}]
         </div>
         <h3 className="text-gunma-text text-xl font-bold mb-3">{card.title}</h3>
-        <p className="text-gunma-text text-sm opacity-90 flex-1 mb-4">{card.description}</p>
+        <p className="text-gunma-text text-sm opacity-90 flex-1 mb-4">
+          {card.text || card.description}
+        </p>
         
         <div className="flex gap-2 text-xs text-gunma-text opacity-60">
           <span>← 逃げる</span>
@@ -103,41 +104,29 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
   );
 };
 
+let globalScenarioManager: ScenarioManager | null = null;
+
+const getScenarioManager = () => {
+  if (!globalScenarioManager) {
+    globalScenarioManager = new ScenarioManager();
+  }
+  return globalScenarioManager;
+};
+
 const SwipeCard = () => {
-  const { currentMode, setCurrentCard } = useGameStore();
-  const [cards, setCards] = useState<CardEvent[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const scenarioManagerRef = useRef<ScenarioManager | null>(null);
+  const { currentMode, currentCard } = useGameStore();
 
   useEffect(() => {
-    if (!scenarioManagerRef.current) {
-      scenarioManagerRef.current = new ScenarioManager();
-    }
+    // Initialize scenario manager
+    getScenarioManager();
   }, []);
 
-  useEffect(() => {
-    const events = scenariosData.events as CardEvent[];
-    setCards(events);
-    if (events.length > 0) {
-      setCurrentCard(events[0]);
-    }
-  }, [setCurrentCard]);
-
   const handleSwipe = (direction: 'left' | 'right', card: CardEvent) => {
-    if (scenarioManagerRef.current) {
-      scenarioManagerRef.current.processCardAction(card, direction);
-    }
-
-    const nextIndex = currentIndex + 1;
-    if (nextIndex < cards.length) {
-      setCurrentIndex(nextIndex);
-      setCurrentCard(cards[nextIndex]);
-    } else {
-      setCurrentCard(undefined);
-    }
+    const manager = getScenarioManager();
+    manager.processCardAction(card, direction);
   };
 
-  if (currentMode !== 'exploration' || cards.length === 0 || currentIndex >= cards.length) {
+  if (currentMode !== 'exploration' || !currentCard) {
     return (
       <div className="w-full h-full flex items-center justify-center text-gunma-text opacity-50">
         <div className="text-center">
@@ -148,19 +137,15 @@ const SwipeCard = () => {
     );
   }
 
-  const visibleCards = cards.slice(currentIndex, Math.min(currentIndex + 3, cards.length));
-
   return (
     <div className="w-full h-full relative flex items-center justify-center p-4">
-      {visibleCards.map((card, idx) => (
-        <Card
-          key={card.id}
-          card={card}
-          index={idx}
-          onSwipe={handleSwipe}
-          isTop={idx === 0}
-        />
-      ))}
+      <Card
+        key={currentCard.id}
+        card={currentCard}
+        index={0}
+        onSwipe={handleSwipe}
+        isTop={true}
+      />
     </div>
   );
 };

@@ -11,9 +11,14 @@ export interface CardEvent {
   type: 'enemy' | 'item' | 'story' | 'trap';
   title: string;
   description: string;
+  text?: string; // Story text for linear scenarios
   image: string; // Asset path
-  onSwipeRight: string; // EffectID
-  onSwipeLeft: string; // EffectID
+  onSwipeRight?: string; // EffectID (optional for linear scenarios)
+  onSwipeLeft?: string; // EffectID (optional for linear scenarios)
+  next?: string; // Next scenario ID for linear progression
+  enemyId?: string; // Enemy ID for enemy events
+  itemGet?: string; // Item to get
+  triggerBattleId?: string; // Battle to trigger
 }
 
 export interface PlayerState {
@@ -44,8 +49,22 @@ export interface BattleState {
   lastEnemyDamage: number;
 }
 
+export interface LegacyCard {
+  id: string;
+  name: string;
+  description: string;
+  category: 'food' | 'landmark' | 'history' | 'culture';
+  effect: {
+    type: 'heal' | 'reward' | 'dice_min';
+    value?: number;
+    description: string;
+  };
+  image: string;
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
 export interface GameState {
-  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover';
+  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection';
   currentCard?: CardEvent;
   battleResult?: {
     damage: number;

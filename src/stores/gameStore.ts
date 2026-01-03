@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { GameState, CardEvent, BattleState } from '../types';
 
 export interface LogEntry {
@@ -8,7 +9,12 @@ export interface LogEntry {
 }
 
 interface GameStore extends GameState {
-  setMode: (mode: 'exploration' | 'battle' | 'menu' | 'gameover') => void;
+  currentScenarioId: string | null;
+  savePoint: string | null; // Last scenario ID before game over
+  setCurrentScenarioId: (id: string | null) => void;
+  setSavePoint: (id: string | null) => void;
+  startNewGame: () => void;
+  setMode: (mode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection') => void;
   setCurrentCard: (card: CardEvent | undefined) => void;
   setBattleResult: (result: { damage: number; diceRoll: number } | undefined) => void;
   setBattleState: (state: BattleState | undefined) => void;
@@ -24,23 +30,52 @@ interface GameStore extends GameState {
   clearLogs: () => void;
   screenShake: boolean;
   triggerScreenShake: () => void;
+  criticalFlash: boolean;
+  triggerCriticalFlash: () => void;
+  gameOverInfo: {
+    cause: string;
+    location: string;
+    lastDamage: number;
+  } | null;
+  setGameOverInfo: (info: { cause: string; location: string; lastDamage: number }) => void;
+  continueFromSavePoint: () => void;
 }
 
-export const useGameStore = create<GameStore>((set, get) => ({
-  currentMode: 'exploration',
-  currentCard: undefined,
-  battleResult: undefined,
-  battleState: undefined,
-  rollDiceRequest: false,
-  diceRollResult: null,
-  diceRollResult2: null,
-  logs: [
-    { message: '> G-OS v2.3.1 起動完了', type: 'info', timestamp: Date.now() },
-    { message: '> グンマー県内の異常を検出...', type: 'info', timestamp: Date.now() },
-    { message: '> 探索モード: 有効', type: 'info', timestamp: Date.now() },
-  ],
-  screenShake: false,
-  setMode: (mode) => set({ currentMode: mode }),
+export const useGameStore = create<GameStore>()(
+  persist(
+    (set, get) => ({
+      currentMode: 'exploration',
+      currentCard: undefined,
+      battleResult: undefined,
+      battleState: undefined,
+      currentScenarioId: null,
+      savePoint: null,
+      rollDiceRequest: false,
+      diceRollResult: null,
+      diceRollResult2: null,
+      logs: [
+        { message: '> G-OS v2.3.1 起動完了', type: 'info', timestamp: Date.now() },
+        { message: '> グンマー県内の異常を検出...', type: 'info', timestamp: Date.now() },
+        { message: '> 探索モード: 有効', type: 'info', timestamp: Date.now() },
+      ],
+      screenShake: false,
+      criticalFlash: false,
+      gameOverInfo: null,
+      setCurrentScenarioId: (id) => set({ currentScenarioId: id, savePoint: id }),
+      setSavePoint: (id) => set({ savePoint: id }),
+      startNewGame: () => {
+        set({
+          currentScenarioId: 'c1_01_intro',
+          savePoint: null,
+          currentMode: 'exploration',
+          currentCard: undefined,
+          battleState: undefined,
+          diceRollResult: null,
+          diceRollResult2: null,
+          logs: [],
+        });
+      },
+      setMode: (mode) => set({ currentMode: mode }),
   setCurrentCard: (card) => set({ currentCard: card }),
   setBattleResult: (result) => set({ battleResult: result }),
   setBattleState: (state) => set({ battleState: state }),
@@ -70,5 +105,30 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ screenShake: true });
     setTimeout(() => set({ screenShake: false }), 500);
   },
-}));
+  triggerCriticalFlash: () => {
+    set({ criticalFlash: true });
+    setTimeout(() => set({ criticalFlash: false }), 300);
+  },
+  setGameOverInfo: (info) => set({ gameOverInfo: info }),
+  continueFromSavePoint: () => {
+    const state = get();
+    if (state.savePoint) {
+      set({ currentScenarioId: state.savePoint, currentMode: 'exploration' });
+      // ScenarioManager will load the scenario
+    } else {
+      // No save point, start from beginning
+      set({ currentScenarioId: 'c1_01_intro', currentMode: 'exploration' });
+    }
+  },
+    }),
+    {
+      name: 'gunma-game-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentScenarioId: state.currentScenarioId,
+        savePoint: state.savePoint,
+      }),
+    }
+  )
+);
 

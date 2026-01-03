@@ -1,8 +1,9 @@
 import { useGameStore } from '../../stores/gameStore';
+import { usePlayerStore } from '../../stores/playerStore';
 import SwipeCard from './SwipeCard';
 
 const ControlDeck = () => {
-  const { currentMode, setMode, triggerDiceRoll } = useGameStore();
+  const { currentMode, setMode, triggerDiceRoll, startNewGame } = useGameStore();
 
   const handleBattleMode = () => {
     setMode('battle');
@@ -14,6 +15,10 @@ const ControlDeck = () => {
 
   const handleRollDice = () => {
     triggerDiceRoll();
+  };
+
+  const handleOpenCollection = () => {
+    setMode('collection');
   };
 
   if (currentMode === 'exploration') {
@@ -90,29 +95,54 @@ const ControlDeck = () => {
         </div>
       </div>
 
-      <div className="flex gap-4 w-full max-w-md">
+      <div className="flex flex-col gap-3 w-full max-w-md">
+        <div className="flex gap-4">
+          <button
+            onClick={handleExplorationMode}
+            className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+                       text-gunma-accent font-mono text-sm font-bold
+                       hover:bg-gunma-accent/10 hover:border-gunma-accent/50
+                       active:scale-95 transition-all duration-150
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentMode === 'exploration'}
+          >
+            探索
+          </button>
+
+          <button
+            onClick={handleBattleMode}
+            className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+                       text-gunma-accent font-mono text-sm font-bold
+                       hover:bg-gunma-accent/10 hover:border-gunma-accent/50
+                       active:scale-95 transition-all duration-150
+                       disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentMode === 'battle'}
+          >
+            バトル
+          </button>
+        </div>
+
         <button
-          onClick={handleExplorationMode}
-          className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+          onClick={handleOpenCollection}
+          className="w-full px-6 py-3 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
                      text-gunma-accent font-mono text-sm font-bold
                      hover:bg-gunma-accent/10 hover:border-gunma-accent/50
-                     active:scale-95 transition-all duration-150
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={currentMode === 'exploration'}
+                     active:scale-95 transition-all duration-150"
         >
-          探索
+          📖 図鑑を見る
         </button>
 
         <button
-          onClick={handleBattleMode}
-          className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
-                     text-gunma-accent font-mono text-sm font-bold
-                     hover:bg-gunma-accent/10 hover:border-gunma-accent/50
-                     active:scale-95 transition-all duration-150
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          disabled={currentMode === 'battle'}
+          onClick={() => {
+            startNewGame();
+            usePlayerStore.setState({ hp: 100, maxHp: 100 });
+          }}
+          className="w-full px-6 py-3 bg-red-500/20 border border-red-500/50 rounded-lg 
+                     text-red-400 font-mono text-sm font-bold
+                     hover:bg-red-500/30 hover:border-red-500
+                     active:scale-95 transition-all duration-150"
         >
-          バトル
+          🎮 New Game
         </button>
       </div>
     </div>

@@ -1,0 +1,83 @@
+{
+  "cards": [
+    {
+      "id": "card_001",
+      "name": "下仁田ねぎ",
+      "description": "群馬県下仁田町特産のねぎ。甘みが強く、鍋料理に最適。",
+      "category": "food",
+      "effect": {
+        "type": "heal",
+        "value": 5,
+        "description": "毎ターンHPが5回復する"
+      },
+      "image": "/assets/images/shimonita_negi.png",
+      "rarity": "common"
+    },
+    {
+      "id": "card_002",
+      "name": "富岡製糸場",
+      "description": "世界遺産に登録された日本の近代化を支えた製糸工場。",
+      "category": "landmark",
+      "effect": {
+        "type": "reward",
+        "value": 1.5,
+        "description": "バトル終了時の報酬が1.5倍になる"
+      },
+      "image": "/assets/images/tomioka_silk.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "card_003",
+      "name": "国定忠治",
+      "description": "幕末の侠客。群馬の地で活躍した義賊として知られる。",
+      "category": "history",
+      "effect": {
+        "type": "dice_min",
+        "value": 2,
+        "description": "ダイスの最低値が2になる（1が出なくなる）"
+      },
+      "image": "/assets/images/kunisada_chuji.png",
+      "rarity": "epic"
+    },
+    {
+      "id": "card_004",
+      "name": "こんにゃく",
+      "description": "群馬はこんにゃくの生産量日本一。低カロリーで健康食品。",
+      "category": "food",
+      "effect": {
+        "type": "heal",
+        "value": 3,
+        "description": "毎ターンHPが3回復する"
+      },
+      "image": "/assets/images/konnyaku.png",
+      "rarity": "common"
+    },
+    {
+      "id": "card_005",
+      "name": "草津温泉",
+      "description": "日本三名泉の一つ。強酸性の湯が特徴。",
+      "category": "landmark",
+      "effect": {
+        "type": "heal",
+        "value": 10,
+        "description": "バトル開始時にHPが10回復する"
+      },
+      "image": "/assets/images/kusatsu_onsen.png",
+      "rarity": "rare"
+    },
+    {
+      "id": "card_006",
+      "name": "榛名山",
+      "description": "群馬県の名山。赤城山、妙義山とともに上毛三山と呼ばれる。",
+      "category": "landmark",
+      "effect": {
+        "type": "dice_min",
+        "value": 3,
+        "description": "ダイスの最低値が3になる（1,2が出なくなる）"
+      },
+      "image": "/assets/images/haruna_mountain.png",
+      "rarity": "legendary"
+    }
+  ]
+}
+

@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { useGameStore } from '../../stores/gameStore';
+import { usePlayerStore } from '../../stores/playerStore';
 import { BattleScene } from '../../scenes/BattleScene';
+import { getBackgroundForLocation } from '../../config/assets';
 
 class BootScene extends Phaser.Scene {
   constructor() {
@@ -30,6 +32,7 @@ const GameCanvas = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const { currentMode } = useGameStore();
+  const { location } = usePlayerStore();
 
   useEffect(() => {
     if (!gameRef.current || phaserGameRef.current) return;
@@ -39,7 +42,7 @@ const GameCanvas = () => {
       width: window.innerWidth,
       height: window.innerHeight * 0.4, // 40vh
       parent: gameRef.current,
-      backgroundColor: '#1a1a1a',
+      backgroundColor: getBackgroundForLocation(location).color,
       physics: {
         default: 'arcade',
         arcade: {
@@ -80,7 +83,7 @@ const GameCanvas = () => {
       ref={gameRef} 
       className="w-full h-full crt-scanline"
       style={{ 
-        backgroundColor: '#1a1a1a',
+        backgroundColor: getBackgroundForLocation(location).color,
         position: 'relative',
       }}
     />
