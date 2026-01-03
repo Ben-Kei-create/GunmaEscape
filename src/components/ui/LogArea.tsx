@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useGameStore, type LogEntry } from '../../stores/gameStore';
 
 const getLogStyle = (type: LogEntry['type']) => {
@@ -26,7 +27,7 @@ const getLogStyle = (type: LogEntry['type']) => {
 
 const LogArea = () => {
   const logRef = useRef<HTMLDivElement>(null);
-  const { logs } = useGameStore();
+  const { logs, currentMode } = useGameStore();
 
   useEffect(() => {
     if (logRef.current) {
@@ -34,10 +35,13 @@ const LogArea = () => {
     }
   }, [logs]);
 
+  // Show blinking cursor when not in battle (waiting for player input)
+  const showCursor = currentMode === 'exploration' && logs.length > 0;
+
   return (
     <div
       ref={logRef}
-      className="w-full h-full glass crt-scanline overflow-y-auto p-4"
+      className="w-full h-full glass crt-scanline overflow-y-auto p-4 relative"
       style={{ scrollBehavior: 'smooth', background: 'rgba(0, 0, 0, 0.8)' }}
     >
       <div className="space-y-2 font-mono text-base leading-relaxed tracking-wide">
@@ -50,6 +54,17 @@ const LogArea = () => {
           </div>
         ))}
       </div>
+
+      {/* Blinking Wait Cursor */}
+      {showCursor && (
+        <motion.div
+          className="absolute bottom-4 right-4 text-gunma-accent text-xl font-bold"
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          ▼
+        </motion.div>
+      )}
     </div>
   );
 };

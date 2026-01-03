@@ -5,74 +5,85 @@
       "type": "story",
       "title": "目覚め",
       "description": "廃墟と化した森で目を覚ました...",
-      "text": "廃墟と化した森で目を覚ました...記憶がない。何も思い出せない。",
-      "image": "/assets/images/forest.png",
-      "next": "c1_02_encounter"
+      "text": "...ここはどこだ？霧が濃すぎて何も見えない。記憶がない。ポケットを探ると「パスポート」が入っていた。なぜ国内なのにパスポートが...？",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
+      "next": "c1_02_realization"
     },
     {
-      "id": "c1_02_encounter",
+      "id": "c1_02_realization",
+      "type": "story",
+      "title": "悪い予感",
+      "description": "恐ろしい事実に気づく",
+      "text": "パスポートの入国スタンプを見た瞬間、全てを理解した。「群馬県」...ここは未開の地、グンマーだ。やたらと風が強い。キャベツが生い茂っている。まさか...おまえはグンマーからにげられない。",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
+      "next": "c1_03_encounter"
+    },
+    {
+      "id": "c1_03_encounter",
       "type": "enemy",
-      "title": "最初の敵",
-      "description": "得体の知れない生き物が現れた...",
-      "text": "得体の知れない、こんにゃくのような生き物がこちらを襲いかかってきた！",
-      "image": "/assets/images/konnyaku_monster.png",
+      "title": "こんにゃくスライム",
+      "description": "プルプルした何かが現れた",
+      "text": "ブヨブヨと震える灰色の塊が現れた！...どうやらこれがグンマー名産「こんにゃくスライム」らしい。プルプルしている。味噌田楽になりたがっているようだ。でも今は殺る気満々だ！",
+      "image": "/assets/enemies/enemy_konnyaku.png",
       "enemyId": "konnyaku_slime",
       "triggerBattleId": "konnyaku_slime",
-      "next": "c1_03_meet_akagi"
+      "next": "c1_04_meet_akagi"
     },
     {
-      "id": "c1_03_meet_akagi",
+      "id": "c1_04_meet_akagi",
       "type": "story",
-      "title": "謎の男",
-      "description": "アカギとの出会い",
-      "text": "戦いの後、謎の男が現れた。「ここはグンマーだ。お前は何も覚えていないのか？」",
-      "image": "/assets/images/villager.png",
-      "next": "c1_04_village"
+      "title": "謎の男「アカギ」",
+      "description": "赤城山の案内人",
+      "text": "「なんだ、よそ者か」謎の男が現れた。「俺はアカギ。オマエ、帰りたいのか？無理だな。県境は封鎖中だ。でも生き延びたいなら...村に来い」男はそう言い残し、霧の中に消えた。",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
+      "next": "c1_05_village"
     },
     {
-      "id": "c1_04_village",
+      "id": "c1_05_village",
       "type": "story",
       "title": "タムラ村",
-      "description": "村長シュウオウ",
-      "text": "タムラ村の村長シュウオウから、不思議なダイスを受け取った。「これで敵と戦える。使い方は覚えろ」",
-      "image": "/assets/images/villager.png",
+      "description": "グンマー最後の集落",
+      "text": "たどり着いた「タムラ村」は、こじんまりとした集落だった。村長のシュウオウは言った。「これを持っていけ。グンマーでの通貨は'キャベツ'だ。そしてこのダイスで敵と戦え」...正気か？",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
       "itemGet": "basic_dice",
-      "next": "c1_05_bandit_rumor"
+      "next": "c1_06_bandit_rumor"
     },
     {
-      "id": "c1_05_bandit_rumor",
+      "id": "c1_06_bandit_rumor",
       "type": "story",
-      "title": "噂",
-      "description": "山賊の噂",
-      "text": "村で聞いた噂によると、最近「暗鞍」という組織が周辺を荒らし回っているという。リーダーは「No.12 グンマ」と呼ばれる男だ。",
-      "image": "/assets/images/villager.png",
-      "next": "c1_06_bandit_encounter"
+      "title": "暗黒組織「暗鞍」",
+      "description": "恐ろしい噂",
+      "text": "村人たちが囁く。「最近、暗鞍（アングラ）という組織がこの辺を荒らしてる」「リーダーは'No.12 グンマ'という男らしい」「焼きまんじゅうを食い逃げするとか」...待て、それは許せん。",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
+      "next": "c1_07_daruma_encounter"
     },
     {
-      "id": "c1_06_bandit_encounter",
-      "type": "story",
-      "title": "山賊との遭遇",
-      "description": "暗鞍の手下",
-      "text": "山道を歩いていると、不穏な男たちが立ちはだかった。「お前たちが暗鞍の手下か？」",
-      "image": "/assets/images/villager.png",
-      "next": "c1_07_boss_approach"
+      "id": "c1_07_daruma_encounter",
+      "type": "enemy",
+      "title": "呪われただるま",
+      "description": "高崎の負の遺産",
+      "text": "山道に巨大なだるまが転がっていた...いや、動いている！目が赤く光り、こちらを見ている！これは高崎産の「呪われただるま」だ！願いを叶える代わりに命を奪う！...いや願ってねぇよ！",
+      "image": "/assets/enemies/enemy_daruma.png",
+      "enemyId": "cursed_daruma",
+      "triggerBattleId": "cursed_daruma",
+      "next": "c1_08_boss_approach"
     },
     {
-      "id": "c1_07_boss_approach",
+      "id": "c1_08_boss_approach",
       "type": "story",
-      "title": "No.12グンマ",
+      "title": "No.12 グンマ",
       "description": "ボスとの対峙",
-      "text": "ついに、No.12グンマと呼ばれる男と対峙した。荷車を引いた男の姿が、薄暗い霧の中に浮かび上がる。",
-      "image": "/assets/images/villager.png",
+      "text": "霧の向こうに、巨大な影が見える。荷車を引いた男...いや、あれは人間なのか？顔がノイズで隠れている。「お前が...噂の'よそ者'か」No.12 グンマが、こちらをゆっくりと振り返った。",
+      "image": "/assets/enemies/boss_gunma_12.png",
       "next": "c1_boss_battle"
     },
     {
       "id": "c1_boss_battle",
       "type": "enemy",
-      "title": "決戦",
-      "description": "No.12グンマとの決戦",
-      "text": "「この荷台が重すぎて...ぐらつきやがる！」",
-      "image": "/assets/images/konnyaku_monster.png",
+      "title": "決戦 No.12 グンマ",
+      "description": "グンマー幹部との戦い",
+      "text": "「この荷台が重すぎて...ぐらつきやがる！」男は荷車を武器のように振り回す！荷台の中身は...大量の「焼きまんじゅう」だ！甘い匂いが戦場を包む！いざ、勝負！",
+      "image": "/assets/enemies/boss_gunma_12.png",
       "enemyId": "boss_gunma_12",
       "triggerBattleId": "boss_gunma_12",
       "next": "c1_ending"
@@ -80,13 +91,11 @@
     {
       "id": "c1_ending",
       "type": "story",
-      "title": "第1章 完",
-      "description": "エンディング",
-      "text": "No.12グンマを倒した後、荷車を調べるとメモが見つかった。「ゆうまさんに連れて行かれた...」\n\n第1章「赤城の霧」完",
-      "image": "/assets/images/villager.png",
+      "title": "第1章「赤城の霧」完",
+      "description": "真実の欠片",
+      "text": "No.12 グンマを倒し、荷車を調べるとメモが見つかった。「ゆうまさんに連れて行かれた...」\\n\\nゆうまさんとは誰だ？グンマーの秘密は深まるばかりだ。\\n\\n― 第1章「赤城の霧」完 ―\\n\\n...おまえはグンマーからにげられない。",
+      "image": "/assets/backgrounds/bg_akagi_mist.png",
       "next": null
     }
   ]
 }
-
-

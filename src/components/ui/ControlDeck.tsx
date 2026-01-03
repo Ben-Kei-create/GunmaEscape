@@ -15,11 +15,26 @@ const ControlDeck = () => {
     startNewGame,
     battleState,
     diceRollResult,
-    diceRollResult2
+    diceRollResult2,
+    setDefending,
+    addLog,
+    setBattleState,
   } = useGameStore();
 
+  // IMPORTANT: This hook must be called unconditionally at the top!
+  const playerState = usePlayerStore();
+
   // ============================================
-  // 2. EVENT HANDLERS
+  // 2. COMPUTED VALUES (derived from hooks)
+  // ============================================
+  const isBattleMode = currentMode === 'battle';
+  const isExplorationMode = currentMode === 'exploration';
+  const isGameOverMode = currentMode === 'gameover';
+  const canRoll = battleState?.turn === 'player' && diceRollResult === null && diceRollResult2 === null;
+  const hasPotion = playerState.inventory.includes('potion');
+
+  // ============================================
+  // 3. EVENT HANDLERS
   // ============================================
   const handleBattleMode = () => {
     soundManager.playSe('button_click');
@@ -54,32 +69,18 @@ const ControlDeck = () => {
     soundManager.playBgm('exploration');
   };
 
-  // ============================================
-  // 3. CONDITIONAL RENDERING (AFTER ALL HOOKS)
-  // ============================================
-
-  // Exploration Mode
-  if (currentMode === 'exploration') {
-    return (
-      <div className="w-full h-full glass crt-scanline">
-        <SwipeCard />
-      </div>
-    );
-  }
-
   const handleDefend = () => {
     soundManager.playSe('button_click');
     hapticsManager.lightImpact();
 
     // Set defending state and switch to enemy turn
-    const gameState = useGameStore.getState();
-    gameState.setDefending(true);
-    gameState.addLog('> 防御態勢を取った!', 'battle');
+    setDefending(true);
+    addLog('> 防御態勢を取った!', 'battle');
 
     // Update battle state to enemy turn
-    if (gameState.battleState) {
-      gameState.setBattleState({
-        ...gameState.battleState,
+    if (battleState) {
+      setBattleState({
+        ...battleState,
         turn: 'enemy',
       });
     }
@@ -88,34 +89,41 @@ const ControlDeck = () => {
   const handleItem = () => {
     soundManager.playSe('button_click');
     hapticsManager.lightImpact();
-    const playerState = usePlayerStore.getState();
-    const gameState = useGameStore.getState();
 
     // Check if player has a potion
-    if (playerState.inventory.includes('potion')) {
+    if (hasPotion) {
       // Use potion
       const healAmount = 30;
       const newHp = Math.min(playerState.maxHp, playerState.hp + healAmount);
       usePlayerStore.setState({ hp: newHp });
       playerState.removeItem('potion');
-      gameState.addLog(`> ポーションを使用! HPが${healAmount}回復した`, 'heal');
+      addLog(`> ポーションを使用! HPが${healAmount}回復した`, 'heal');
 
       // Update battle state to enemy turn
-      if (gameState.battleState) {
-        gameState.setBattleState({
-          ...gameState.battleState,
+      if (battleState) {
+        setBattleState({
+          ...battleState,
           turn: 'enemy',
         });
       }
     }
   };
 
-  // Battle Mode
-  if (currentMode === 'battle') {
-    const canRoll = battleState?.turn === 'player' && diceRollResult === null && diceRollResult2 === null;
-    const playerState = usePlayerStore();
-    const hasPotion = playerState.inventory.includes('potion');
+  // ============================================
+  // 4. CONDITIONAL RENDERING (AFTER ALL HOOKS)
+  // ============================================
 
+  // Exploration Mode
+  if (isExplorationMode) {
+    return (
+      <div className="w-full h-full glass crt-scanline">
+        <SwipeCard />
+      </div>
+    );
+  }
+
+  // Battle Mode
+  if (isBattleMode) {
     return (
       <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
         <div className="text-center mb-2">
@@ -173,7 +181,7 @@ const ControlDeck = () => {
   }
 
   // Game Over Mode
-  if (currentMode === 'gameover') {
+  if (isGameOverMode) {
     return (
       <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
         <div className="text-center mb-4">
@@ -259,3 +267,4 @@ const ControlDeck = () => {
 };
 
 export default ControlDeck;
+

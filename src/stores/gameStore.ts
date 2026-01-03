@@ -14,7 +14,7 @@ interface GameStore extends GameState {
   setCurrentScenarioId: (id: string | null) => void;
   setSavePoint: (id: string | null) => void;
   startNewGame: () => void;
-  setMode: (mode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection') => void;
+  setMode: (mode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection' | 'victory') => void;
   setCurrentCard: (card: CardEvent | undefined) => void;
   setBattleResult: (result: { damage: number; diceRoll: number } | undefined) => void;
   setBattleState: (state: BattleState | undefined) => void;
@@ -62,6 +62,16 @@ interface GameStore extends GameState {
   }>;
   addFloatingText: (text: { value: number; x: number; y: number; type: 'damage' | 'heal' | 'critical' }) => void;
   removeFloatingText: (id: string) => void;
+  // Tutorial
+  hasSeenTutorial: boolean;
+  setHasSeenTutorial: (seen: boolean) => void;
+  // Collection/Discovery
+  discoveredItems: string[];
+  discoverItem: (itemId: string) => void;
+  // Easter egg
+  gunmaModeTaps: number;
+  incrementGunmaModeTaps: () => void;
+  resetGunmaModeTaps: () => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -93,6 +103,9 @@ export const useGameStore = create<GameStore>()(
       },
       isSaving: false,
       floatingTexts: [],
+      hasSeenTutorial: false,
+      discoveredItems: [],
+      gunmaModeTaps: 0,
 
       setIsTitleVisible: (visible) => set({ isTitleVisible: visible }),
 
@@ -167,6 +180,14 @@ export const useGameStore = create<GameStore>()(
       removeFloatingText: (id) => set((state) => ({
         floatingTexts: state.floatingTexts.filter(t => t.id !== id)
       })),
+      setHasSeenTutorial: (seen) => set({ hasSeenTutorial: seen }),
+      discoverItem: (itemId) => set((state) => ({
+        discoveredItems: state.discoveredItems.includes(itemId)
+          ? state.discoveredItems
+          : [...state.discoveredItems, itemId]
+      })),
+      incrementGunmaModeTaps: () => set((state) => ({ gunmaModeTaps: state.gunmaModeTaps + 1 })),
+      resetGunmaModeTaps: () => set({ gunmaModeTaps: 0 }),
     }),
     {
       name: 'gunma-game-storage',
@@ -175,6 +196,8 @@ export const useGameStore = create<GameStore>()(
         currentScenarioId: state.currentScenarioId,
         savePoint: state.savePoint,
         settings: state.settings,
+        hasSeenTutorial: state.hasSeenTutorial,
+        discoveredItems: state.discoveredItems,
       }),
       onRehydrateStorage: () => (state) => {
         // Show save indicator briefly on load

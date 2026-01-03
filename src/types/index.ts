@@ -64,7 +64,7 @@ export interface LegacyCard {
 }
 
 export interface GameState {
-  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection';
+  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection' | 'victory';
   currentCard?: CardEvent;
   battleResult?: {
     damage: number;
