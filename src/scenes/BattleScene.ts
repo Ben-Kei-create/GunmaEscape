@@ -8,19 +8,20 @@ interface DiceSprite extends Phaser.GameObjects.Container {
   body: Phaser.Physics.Arcade.Body;
 }
 
+// Configuration constants
+const DICE_TIMEOUT_MS = 3000; // Force stop dice after 3 seconds if physics doesn't settle
+
 export class BattleScene extends Phaser.Scene {
   private dice1: DiceSprite | null = null;
   private dice2: DiceSprite | null = null;
-  private dice1Value: number = 1;
-  private dice2Value: number = 1;
   private isRolling: boolean = false;
-  private walls: Phaser.GameObjects.Rectangle[] = [];
+  // private walls: Phaser.GameObjects.Rectangle[] = [];
   private rollRequestListener: (() => void) | null = null;
   private battleSystem: BattleSystem;
   private currentRoll: 'dice1' | 'dice2' | 'none' = 'none';
   private enemyInfoText: Phaser.GameObjects.Text | null = null;
   private enemySprite: Phaser.GameObjects.Container | null = null;
-  private impactParticles: Phaser.GameObjects.Particles.ParticleEmitterManager | null = null;
+  private impactParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private sparkParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 
   constructor() {
@@ -30,7 +31,7 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     this.cameras.main.setBackgroundColor('#1a1a1a');
-    
+
     const { width, height } = this.cameras.main;
 
     // Create walls for collision
@@ -45,7 +46,7 @@ export class BattleScene extends Phaser.Scene {
     this.physics.add.existing(leftWall as Phaser.GameObjects.GameObject, true);
     this.physics.add.existing(rightWall as Phaser.GameObjects.GameObject, true);
 
-    this.walls = [topWall, bottomWall, leftWall, rightWall];
+    // this.walls = [topWall, bottomWall, leftWall, rightWall];
 
     // Create particle texture programmatically
     const graphics = this.add.graphics();
@@ -65,9 +66,8 @@ export class BattleScene extends Phaser.Scene {
     this.impactParticles.setVisible(false);
 
     // Create spark particles
-    this.sparkParticles = this.impactParticles.createEmitter({
-      x: 0,
-      y: 0,
+    // Create spark particles
+    this.sparkParticles = this.add.particles(0, 0, 'particle', {
       scale: { start: 0.5, end: 0 },
       speed: { min: 30, max: 80 },
       angle: { min: 0, max: 360 },
@@ -107,25 +107,25 @@ export class BattleScene extends Phaser.Scene {
 
   private createEnemySprite() {
     const { width, height } = this.cameras.main;
-    
+
     // Create placeholder enemy sprite (will be replaced with actual graphics)
     const enemyContainer = this.add.container(width / 2, height * 0.5);
-    
+
     // Simple enemy representation
     const enemyBody = this.add.graphics();
     enemyBody.fillStyle(0x8b4513, 1); // Brown color for konnyaku monster
     enemyBody.fillCircle(0, 0, 40);
     enemyBody.lineStyle(2, 0x654321, 1);
     enemyBody.strokeCircle(0, 0, 40);
-    
+
     const eye1 = this.add.graphics();
     eye1.fillStyle(0xff0000, 1);
     eye1.fillCircle(-15, -10, 5);
-    
+
     const eye2 = this.add.graphics();
     eye2.fillStyle(0xff0000, 1);
     eye2.fillCircle(15, -10, 5);
-    
+
     enemyContainer.add([enemyBody, eye1, eye2]);
     this.enemySprite = enemyContainer;
   }
@@ -167,11 +167,11 @@ export class BattleScene extends Phaser.Scene {
     const woodColor = 0x8b6914;
     const darkWood = 0x654321;
     const lightWood = 0xcd853f;
-    
+
     // Base wood color
     graphics.fillStyle(woodColor, 1);
     graphics.fillRoundedRect(-size / 2, -size / 2, size, size, 4);
-    
+
     // Wood grain pattern (vertical lines)
     graphics.lineStyle(1, darkWood, 0.5);
     for (let i = -size / 2; i < size / 2; i += 3) {
@@ -179,13 +179,13 @@ export class BattleScene extends Phaser.Scene {
       graphics.lineTo(i, size / 2);
     }
     graphics.strokePath();
-    
+
     // Highlight
     graphics.lineStyle(1, lightWood, 0.3);
     graphics.moveTo(-size / 2, -size / 2);
     graphics.lineTo(size / 2, -size / 2);
     graphics.strokePath();
-    
+
     // Border
     graphics.lineStyle(2, 0x39ff14, 1);
     graphics.strokeRoundedRect(-size / 2, -size / 2, size, size, 4);
@@ -195,19 +195,19 @@ export class BattleScene extends Phaser.Scene {
     const { width, height } = this.cameras.main;
     const diceSize = 50;
     const spacing = 80;
-    
+
     // Create dice 1
     const diceContainer1 = this.add.container(width / 2 - spacing, height * 0.3) as DiceSprite;
     const diceGraphics1 = this.add.graphics();
     this.createPixelArtDice(diceGraphics1, diceSize);
-    
+
     const numberText1 = this.add.text(0, 0, '1', {
       fontSize: '28px',
       fontFamily: 'monospace',
       color: '#000000',
-      fontWeight: 'bold',
+      fontStyle: 'bold',
     }).setOrigin(0.5);
-    
+
     diceContainer1.add([diceGraphics1, numberText1]);
     this.physics.add.existing(diceContainer1);
     const body1 = diceContainer1.body as Phaser.Physics.Arcade.Body;
@@ -217,19 +217,19 @@ export class BattleScene extends Phaser.Scene {
     body1.setCollideWorldBounds(true);
     (diceContainer1 as any).numberText = numberText1;
     this.dice1 = diceContainer1;
-    
+
     // Create dice 2
     const diceContainer2 = this.add.container(width / 2 + spacing, height * 0.3) as DiceSprite;
     const diceGraphics2 = this.add.graphics();
     this.createPixelArtDice(diceGraphics2, diceSize);
-    
+
     const numberText2 = this.add.text(0, 0, '1', {
       fontSize: '28px',
       fontFamily: 'monospace',
       color: '#000000',
-      fontWeight: 'bold',
+      fontStyle: 'bold',
     }).setOrigin(0.5);
-    
+
     diceContainer2.add([diceGraphics2, numberText2]);
     this.physics.add.existing(diceContainer2);
     const body2 = diceContainer2.body as Phaser.Physics.Arcade.Body;
@@ -244,11 +244,11 @@ export class BattleScene extends Phaser.Scene {
   private updateEnemyInfo() {
     const battleState = this.battleSystem.getCurrentBattleState();
     const { width, height } = this.cameras.main;
-    
+
     if (this.enemyInfoText) {
       this.enemyInfoText.destroy();
     }
-    
+
     if (battleState?.enemy) {
       const enemy = battleState.enemy;
       this.enemyInfoText = this.add.text(
@@ -270,16 +270,16 @@ export class BattleScene extends Phaser.Scene {
     const checkRollRequest = () => {
       const state = useGameStore.getState();
       const battleState = state.battleState;
-      
+
       if (!battleState?.isActive) {
         return;
       }
-      
+
       // Update enemy info
       if (battleState.enemy) {
         this.updateEnemyInfo();
       }
-      
+
       // Only process dice rolls during player turn
       if (battleState.turn === 'player') {
         if (state.rollDiceRequest && !this.isRolling && this.currentRoll === 'none' && state.diceRollResult === null) {
@@ -298,7 +298,7 @@ export class BattleScene extends Phaser.Scene {
           useGameStore.setState({ diceRollResult: null, diceRollResult2: null });
         }
       }
-      
+
       // Check battle end
       const battleResult = this.battleSystem.checkBattleEnd();
       if (battleResult && battleState.turn !== 'enemy') {
@@ -309,7 +309,7 @@ export class BattleScene extends Phaser.Scene {
     this.rollRequestListener = () => {
       checkRollRequest();
     };
-    
+
     this.time.addEvent({
       delay: 100,
       callback: this.rollRequestListener,
@@ -326,7 +326,7 @@ export class BattleScene extends Phaser.Scene {
     // Reset dice position
     dice.setPosition(diceType === 'dice1' ? width / 2 - 80 : width / 2 + 80, height * 0.9);
     dice.setRotation(0);
-    
+
     // Random initial velocity
     const velocityX = Phaser.Math.Between(-300, 300);
     const velocityY = Phaser.Math.Between(-600, -400);
@@ -335,6 +335,11 @@ export class BattleScene extends Phaser.Scene {
     const body = dice.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(velocityX, velocityY);
     body.setAngularVelocity(angularVelocity);
+
+    // Add damping to ensure dice eventually stops
+    body.setDamping(true);
+    body.setDrag(200, 200);
+    body.setAngularDrag(300);
 
     // Store reference to dice for collision detection
     (dice as any).isRolling = true;
@@ -348,10 +353,10 @@ export class BattleScene extends Phaser.Scene {
           rollCount++;
           const randomValue = Phaser.Math.Between(1, 6);
           (dice as any).numberText.setText(randomValue.toString());
-          
+
           // Rotate visual
           dice.setRotation(dice.rotation + 0.5);
-          
+
           if (rollCount > 20) {
             rollInterval.destroy();
           }
@@ -365,7 +370,7 @@ export class BattleScene extends Phaser.Scene {
       delay: 100,
       callback: () => {
         if (!dice) return;
-        
+
         const body = dice.body as Phaser.Physics.Arcade.Body;
         const speed = Math.abs(body.velocity.x) + Math.abs(body.velocity.y);
         const angularSpeed = Math.abs(body.angularVelocity);
@@ -381,20 +386,34 @@ export class BattleScene extends Phaser.Scene {
       },
       loop: true,
     });
+
+    // Failsafe: Force stop after timeout if physics doesn't settle
+    this.time.delayedCall(DICE_TIMEOUT_MS, () => {
+      if (this.isRolling && this.currentRoll !== 'none') {
+        console.warn('[BattleScene] Dice timeout - forcing stop');
+        checkStop.destroy();
+        rollInterval.destroy();
+        // Force stop the dice
+        body.setVelocity(0, 0);
+        body.setAngularVelocity(0);
+        this.onDiceStopped(dice, diceType);
+        this.createImpactParticles(dice.x, dice.y);
+      }
+    });
   }
 
   private onDiceStopped(dice: DiceSprite, diceType: 'dice1' | 'dice2') {
     // Calculate final dice value (random 1-6 for now)
     const diceValue = Phaser.Math.Between(1, 6);
     (dice as any).numberText.setText(diceValue.toString());
-    
+
     // Send result to React store
     const state = useGameStore.getState();
     if (diceType === 'dice1') {
-      this.dice1Value = diceValue;
+      // this.dice1Value = diceValue;
       state.setDiceRollResult(diceValue);
     } else {
-      this.dice2Value = diceValue;
+      // this.dice2Value = diceValue;
       state.setDiceRollResult2(diceValue);
     }
 
@@ -408,7 +427,7 @@ export class BattleScene extends Phaser.Scene {
     // Create spark particles at impact point
     this.sparkParticles.setPosition(x, y);
     this.sparkParticles.explode(8);
-    
+
     // Play sound and haptic feedback
     soundManager.playSe('dice_hit');
     hapticsManager.lightImpact();
@@ -417,29 +436,29 @@ export class BattleScene extends Phaser.Scene {
   private processPlayerAttack(dice1: number, dice2: number) {
     const damage = this.battleSystem.processPlayerAttack(dice1, dice2);
     const isCritical = dice1 === dice2;
-    
+
     // Trigger hit flash
     this.triggerHitFlash();
-    
+
     if (isCritical) {
       // Critical flash effect
       useGameStore.getState().triggerCriticalFlash();
       useGameStore.getState().addLog(`> GUNMA BURST! ${dice1}-${dice2} クリティカル!`, 'critical');
       useGameStore.getState().addLog(`> ${damage} ダメージを与えた!`, 'damage');
-      
+
       // Lightning effect
       this.createLightningEffect();
-      
+
       // Strong haptic feedback for critical
       hapticsManager.heavyImpact();
     } else {
       useGameStore.getState().addLog(`> ダイス: ${dice1} + ${dice2} = ${dice1 + dice2}`, 'battle');
       useGameStore.getState().addLog(`> ${damage} ダメージを与えた!`, 'damage');
-      
+
       // Medium haptic for normal hit
       hapticsManager.mediumImpact();
     }
-    
+
     // Enemy turn after delay
     this.time.delayedCall(1500, () => {
       this.processEnemyTurn();
@@ -448,7 +467,7 @@ export class BattleScene extends Phaser.Scene {
 
   private createLightningEffect() {
     const { width, height } = this.cameras.main;
-    
+
     // Create lightning-like lines
     for (let i = 0; i < 3; i++) {
       const lightning = this.add.graphics();
@@ -456,11 +475,11 @@ export class BattleScene extends Phaser.Scene {
       const startY = 0;
       const endX = Phaser.Math.Between(0, width);
       const endY = height;
-      
+
       lightning.lineStyle(3, 0x39ff14, 1);
       lightning.beginPath();
       lightning.moveTo(startX, startY);
-      
+
       // Zigzag pattern
       const segments = 5;
       for (let j = 1; j < segments; j++) {
@@ -468,11 +487,11 @@ export class BattleScene extends Phaser.Scene {
         const midY = Phaser.Math.Linear(startY, endY, j / segments);
         lightning.lineTo(midX, midY);
       }
-      
+
       lightning.lineTo(endX, endY);
       lightning.strokePath();
       lightning.setBlendMode('ADD');
-      
+
       // Fade out
       this.tweens.add({
         targets: lightning,
@@ -492,11 +511,11 @@ export class BattleScene extends Phaser.Scene {
     const damage = this.battleSystem.processEnemyAttack();
     useGameStore.getState().addLog(`> ${battleState.enemy!.name}の攻撃! ${damage} ダメージを受けた!`, 'damage');
     useGameStore.getState().triggerScreenShake();
-    
+
     // Play damage sound and strong haptic
     soundManager.playSe('damage');
     hapticsManager.vibrate();
-    
+
     // Check battle end
     const battleResult = this.battleSystem.checkBattleEnd();
     if (battleResult) {
@@ -511,13 +530,13 @@ export class BattleScene extends Phaser.Scene {
       useGameStore.getState().addLog('> VICTORY! 敵を倒しました!', 'victory');
       soundManager.playSe('win');
       hapticsManager.notification();
-      
+
       // Switch back to exploration BGM
       soundManager.playBgm('exploration');
     } else {
       useGameStore.getState().addLog('> GAME OVER...', 'defeat');
     }
-    
+
     this.battleSystem.endBattle(result);
     this.updateEnemyInfo();
   }
@@ -526,12 +545,12 @@ export class BattleScene extends Phaser.Scene {
     // Update dice visual rotation based on physics
     if (this.dice1) {
       const body = this.dice1.body as Phaser.Physics.Arcade.Body;
-      
+
       // Check for wall collisions to create particles
       if (Math.abs(body.velocity.x) > 50 || Math.abs(body.velocity.y) > 50) {
         const prevX = (this.dice1 as any).prevX || this.dice1.x;
         const prevY = (this.dice1 as any).prevY || this.dice1.y;
-        
+
         // Detect sudden velocity change (collision)
         if (Math.abs(this.dice1.x - prevX) > 5 || Math.abs(this.dice1.y - prevY) > 5) {
           // Check if hitting a wall (high velocity)
@@ -540,32 +559,32 @@ export class BattleScene extends Phaser.Scene {
             const prevVy = (this.dice1 as any).prevVy || 0;
             const vxChange = Math.abs(body.velocity.x - prevVx);
             const vyChange = Math.abs(body.velocity.y - prevVy);
-            
+
             // Sudden velocity change indicates collision
             if (vxChange > 50 || vyChange > 50) {
               this.createImpactParticles(this.dice1.x, this.dice1.y);
             }
           }
         }
-        
+
         (this.dice1 as any).prevX = this.dice1.x;
         (this.dice1 as any).prevY = this.dice1.y;
         (this.dice1 as any).prevVx = body.velocity.x;
         (this.dice1 as any).prevVy = body.velocity.y;
       }
-      
+
       if (Math.abs(body.angularVelocity) > 10) {
         this.dice1.setRotation(this.dice1.rotation + body.angularVelocity * 0.001);
       }
     }
     if (this.dice2) {
       const body = this.dice2.body as Phaser.Physics.Arcade.Body;
-      
+
       // Check for wall collisions
       if (Math.abs(body.velocity.x) > 50 || Math.abs(body.velocity.y) > 50) {
         const prevX = (this.dice2 as any).prevX || this.dice2.x;
         const prevY = (this.dice2 as any).prevY || this.dice2.y;
-        
+
         if (Math.abs(this.dice2.x - prevX) > 5 || Math.abs(this.dice2.y - prevY) > 5) {
           // Check if hitting a wall (high velocity)
           if (Math.abs(body.velocity.x) > 100 || Math.abs(body.velocity.y) > 100) {
@@ -573,21 +592,21 @@ export class BattleScene extends Phaser.Scene {
             const prevVy = (this.dice2 as any).prevVy || 0;
             const vxChange = Math.abs(body.velocity.x - prevVx);
             const vyChange = Math.abs(body.velocity.y - prevVy);
-            
+
             // Sudden velocity change indicates collision
             if (vxChange > 50 || vyChange > 50) {
               this.createImpactParticles(this.dice2.x, this.dice2.y);
             }
           }
         }
-        
+
         (this.dice2 as any).prevVx = body.velocity.x;
         (this.dice2 as any).prevVy = body.velocity.y;
-        
+
         (this.dice2 as any).prevX = this.dice2.x;
         (this.dice2 as any).prevY = this.dice2.y;
       }
-      
+
       if (Math.abs(body.angularVelocity) > 10) {
         this.dice2.setRotation(this.dice2.rotation + body.angularVelocity * 0.001);
       }

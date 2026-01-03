@@ -39,11 +39,14 @@ interface GameStore extends GameState {
   } | null;
   setGameOverInfo: (info: { cause: string; location: string; lastDamage: number }) => void;
   continueFromSavePoint: () => void;
+  isTitleVisible: boolean;
+  setIsTitleVisible: (visible: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
+      isTitleVisible: true,
       currentMode: 'exploration',
       currentCard: undefined,
       battleResult: undefined,
@@ -61,10 +64,15 @@ export const useGameStore = create<GameStore>()(
       screenShake: false,
       criticalFlash: false,
       gameOverInfo: null,
+
+      setIsTitleVisible: (visible) => set({ isTitleVisible: visible }),
+
       setCurrentScenarioId: (id) => set({ currentScenarioId: id, savePoint: id }),
       setSavePoint: (id) => set({ savePoint: id }),
+
       startNewGame: () => {
         set({
+          isTitleVisible: false,
           currentScenarioId: 'c1_01_intro',
           savePoint: null,
           currentMode: 'exploration',
@@ -76,50 +84,50 @@ export const useGameStore = create<GameStore>()(
         });
       },
       setMode: (mode) => set({ currentMode: mode }),
-  setCurrentCard: (card) => set({ currentCard: card }),
-  setBattleResult: (result) => set({ battleResult: result }),
-  setBattleState: (state) => set({ battleState: state }),
-  triggerDiceRoll: () => {
-    set({ rollDiceRequest: true, diceRollResult: null, diceRollResult2: null });
-  },
-  clearDiceRollRequest: () => set({ rollDiceRequest: false }),
-  setDiceRollResult: (result: number) => {
-    const current = get();
-    if (current.diceRollResult === null) {
-      set({ diceRollResult: result });
-    } else {
-      // Second dice roll
-      set({ diceRollResult2: result, rollDiceRequest: false });
-    }
-  },
-  setDiceRollResult2: (result: number) => {
-    set({ diceRollResult2: result });
-  },
-  addLog: (message, type = 'info') => {
-    set((state) => ({
-      logs: [...state.logs, { message, type, timestamp: Date.now() }],
-    }));
-  },
-  clearLogs: () => set({ logs: [] }),
-  triggerScreenShake: () => {
-    set({ screenShake: true });
-    setTimeout(() => set({ screenShake: false }), 500);
-  },
-  triggerCriticalFlash: () => {
-    set({ criticalFlash: true });
-    setTimeout(() => set({ criticalFlash: false }), 300);
-  },
-  setGameOverInfo: (info) => set({ gameOverInfo: info }),
-  continueFromSavePoint: () => {
-    const state = get();
-    if (state.savePoint) {
-      set({ currentScenarioId: state.savePoint, currentMode: 'exploration' });
-      // ScenarioManager will load the scenario
-    } else {
-      // No save point, start from beginning
-      set({ currentScenarioId: 'c1_01_intro', currentMode: 'exploration' });
-    }
-  },
+      setCurrentCard: (card) => set({ currentCard: card }),
+      setBattleResult: (result) => set({ battleResult: result }),
+      setBattleState: (state) => set({ battleState: state }),
+      triggerDiceRoll: () => {
+        set({ rollDiceRequest: true, diceRollResult: null, diceRollResult2: null });
+      },
+      clearDiceRollRequest: () => set({ rollDiceRequest: false }),
+      setDiceRollResult: (result: number) => {
+        const current = get();
+        if (current.diceRollResult === null) {
+          set({ diceRollResult: result });
+        } else {
+          // Second dice roll
+          set({ diceRollResult2: result, rollDiceRequest: false });
+        }
+      },
+      setDiceRollResult2: (result: number) => {
+        set({ diceRollResult2: result });
+      },
+      addLog: (message, type = 'info') => {
+        set((state) => ({
+          logs: [...state.logs, { message, type, timestamp: Date.now() }],
+        }));
+      },
+      clearLogs: () => set({ logs: [] }),
+      triggerScreenShake: () => {
+        set({ screenShake: true });
+        setTimeout(() => set({ screenShake: false }), 500);
+      },
+      triggerCriticalFlash: () => {
+        set({ criticalFlash: true });
+        setTimeout(() => set({ criticalFlash: false }), 300);
+      },
+      setGameOverInfo: (info) => set({ gameOverInfo: info }),
+      continueFromSavePoint: () => {
+        const state = get();
+        if (state.savePoint) {
+          set({ currentScenarioId: state.savePoint, currentMode: 'exploration' });
+          // ScenarioManager will load the scenario
+        } else {
+          // No save point, start from beginning
+          set({ currentScenarioId: 'c1_01_intro', currentMode: 'exploration' });
+        }
+      },
     }),
     {
       name: 'gunma-game-storage',

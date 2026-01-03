@@ -35,15 +35,15 @@ const LogArea = () => {
   }, [logs]);
 
   return (
-    <div 
+    <div
       ref={logRef}
       className="w-full h-full glass crt-scanline overflow-y-auto p-4"
-      style={{ scrollBehavior: 'smooth' }}
+      style={{ scrollBehavior: 'smooth', background: 'rgba(0, 0, 0, 0.8)' }}
     >
-      <div className="space-y-1 font-mono text-sm">
+      <div className="space-y-2 font-mono text-base leading-relaxed tracking-wide">
         {logs.map((log, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className={getLogStyle(log.type)}
           >
             {log.message}

@@ -2,19 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* iOS Safe Area Variables */
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* Prevent text selection and input on mobile */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: manipulation;
+  /* Prevent zoom and other gestures */
+}
+
+/* Allow selection only for actual input fields (if any) */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body {
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-family: 'DotGothic16', 'M PLUS 1 Code', 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   background-color: #1a1a1a;
   color: #f5f5f0;
   overflow: hidden;
   height: 100vh;
   width: 100vw;
+  /* Support full screen on iOS */
+  min-height: -webkit-fill-available;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -23,6 +45,9 @@ body {
   width: 100%;
   height: 100%;
   position: relative;
+  /* Safe area padding - applied to root so App fits inside */
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
 }
 
 /* G-OS Glassmorphism */
@@ -45,10 +70,8 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    transparent 50%,
-    rgba(57, 255, 20, 0.03) 50%
-  );
+  background: linear-gradient(transparent 50%,
+      rgba(57, 255, 20, 0.03) 50%);
   background-size: 100% 4px;
   pointer-events: none;
   z-index: 1000;
@@ -59,15 +82,19 @@ body {
   0% {
     text-shadow: 2px 0 #39ff14, -2px 0 #ff0000;
   }
+
   10% {
     text-shadow: -2px 0 #39ff14, 2px 0 #ff0000;
   }
+
   20% {
     text-shadow: 2px 0 #39ff14, -2px 0 #ff0000;
   }
+
   30% {
     text-shadow: -2px 0 #39ff14, 2px 0 #ff0000;
   }
+
   100% {
     text-shadow: 2px 0 #39ff14, -2px 0 #ff0000;
   }
@@ -94,4 +121,3 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #2dd012;
 }
-

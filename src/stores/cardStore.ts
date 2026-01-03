@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { LegacyCard } from '../types';
+// import type { LegacyCard } from '../types';
 
 interface CardStore {
   collectedCards: string[]; // Array of card IDs

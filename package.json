@@ -16,18 +16,19 @@
         "ios:dev": "npm run dev & cap run ios"
     },
     "dependencies": {
+        "framer-motion": "^10.16.16",
+        "html2canvas": "^1.4.1",
+        "phaser": "^3.70.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "phaser": "^3.70.0",
-        "framer-motion": "^10.16.16",
-        "zustand": "^4.4.7",
-        "html2canvas": "^1.4.1"
+        "zustand": "^4.4.7"
     },
     "devDependencies": {
+        "@capacitor/assets": "^3.0.5",
         "@capacitor/cli": "^5.5.1",
         "@capacitor/core": "^5.5.1",
         "@capacitor/haptics": "^5.0.6",
-        "@capacitor/ios": "^5.5.1",
+        "@capacitor/ios": "^5.7.8",
         "@types/react": "^18.2.43",
         "@types/react-dom": "^18.2.17",
         "@typescript-eslint/eslint-plugin": "^6.14.0",

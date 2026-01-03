@@ -23,3 +23,4 @@ export const getBackgroundForLocation = (location: string) => {
   return ASSETS.backgrounds[location as keyof typeof ASSETS.backgrounds] || ASSETS.backgrounds.default;
 };
 
+

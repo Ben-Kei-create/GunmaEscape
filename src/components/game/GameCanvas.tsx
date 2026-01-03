@@ -14,10 +14,10 @@ class BootScene extends Phaser.Scene {
   create() {
     // Initial scene setup
     this.cameras.main.setBackgroundColor('#1a1a1a');
-    
+
     // Play exploration BGM
     soundManager.playBgm('exploration');
-    
+
     // Placeholder text
     this.add.text(
       this.cameras.main.width / 2,
@@ -50,7 +50,7 @@ const GameCanvas = () => {
       physics: {
         default: 'arcade',
         arcade: {
-          gravity: { y: 300 },
+          gravity: { x: 0, y: 300 },
           debug: false,
         },
       },
@@ -83,10 +83,10 @@ const GameCanvas = () => {
   }, [currentMode]);
 
   return (
-    <div 
-      ref={gameRef} 
+    <div
+      ref={gameRef}
       className="w-full h-full crt-scanline"
-      style={{ 
+      style={{
         backgroundColor: getBackgroundForLocation(location).color,
         position: 'relative',
       }}

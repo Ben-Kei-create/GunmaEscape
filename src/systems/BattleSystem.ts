@@ -15,12 +15,12 @@ export const setVictoryCallback = (callback: (enemyId: string) => void) => {
 // Card discovery on victory
 export const discoverCardOnVictory = (enemyId: string) => {
   const cardStore = useCardStore.getState();
-  
+
   // Map enemy IDs to potential card discoveries
   const cardRewards: Record<string, string[]> = {
     'event_001': ['card_004'], // Konnyaku monster -> Konnyaku card
   };
-  
+
   const possibleCards = cardRewards[enemyId] || [];
   if (possibleCards.length > 0) {
     const cardId = possibleCards[Math.floor(Math.random() * possibleCards.length)];
@@ -75,7 +75,7 @@ export class BattleSystem {
   }
 
   startBattle(enemy: Enemy) {
-    const gameState = this.gameStore.getState();
+    // const gameState = this.gameStore.getState();
     const playerState = this.playerStore.getState();
 
     // Apply battle start card effects (like Kusatsu Onsen)
@@ -107,7 +107,7 @@ export class BattleSystem {
   processPlayerAttack(dice1: number, dice2: number): number {
     const gameState = this.gameStore.getState();
     const battleState = gameState.battleState;
-    
+
     if (!battleState?.isActive || !battleState.enemy) {
       return 0;
     }
@@ -115,7 +115,7 @@ export class BattleSystem {
     // Apply card effects that modify dice minimum value
     const activeCards = this.getActiveCards();
     let minDiceValue = 1;
-    
+
     activeCards.forEach(card => {
       if (card.effect.type === 'dice_min' && card.effect.value) {
         minDiceValue = Math.max(minDiceValue, card.effect.value);
@@ -125,7 +125,7 @@ export class BattleSystem {
     // Apply minimum dice value (e.g., Kunisada Chuji or Haruna Mountain)
     const adjustedDice1 = Math.max(dice1, minDiceValue);
     const adjustedDice2 = Math.max(dice2, minDiceValue);
-    
+
     if (dice1 < minDiceValue || dice2 < minDiceValue) {
       const card = activeCards.find(c => c.effect.type === 'dice_min');
       if (card) {
@@ -135,7 +135,7 @@ export class BattleSystem {
 
     const isCritical = adjustedDice1 === adjustedDice2;
     let baseDamage = adjustedDice1 + adjustedDice2;
-    
+
     // Equipment bonus (placeholder)
     const equipmentBonus = 1.0;
     baseDamage = Math.floor(baseDamage * equipmentBonus);
@@ -177,13 +177,13 @@ export class BattleSystem {
     // Enemy dice roll (1-6)
     const enemyDice = Math.floor(Math.random() * 6) + 1;
     let baseDamage = enemyDice + battleState.enemy.attack;
-    
+
     // Player defense (placeholder)
     const playerDefense = 0;
     baseDamage = Math.max(1, baseDamage - playerDefense);
 
     const newPlayerHp = Math.max(0, playerState.hp - baseDamage);
-    
+
     this.playerStore.setState({ hp: newPlayerHp });
 
     // Apply per-turn card effects (heal effects)
@@ -230,7 +230,7 @@ export class BattleSystem {
       // Apply card effects that increase victory rewards
       const activeCards = this.getActiveCards();
       let rewardMultiplier = 1.0;
-      
+
       activeCards.forEach(card => {
         if (card.effect.type === 'reward' && card.effect.value) {
           rewardMultiplier = Math.max(rewardMultiplier, card.effect.value);
@@ -239,12 +239,12 @@ export class BattleSystem {
       });
 
       this.gameStore.getState().addLog('> 次のエリアへ進む...', 'info');
-      
+
       // Discover card on victory
       if (battleState?.enemy?.id) {
         discoverCardOnVictory(battleState.enemy.id);
       }
-      
+
       // Call victory callback to advance scenario
       if (victoryCallback && battleState?.enemy?.id) {
         victoryCallback(battleState.enemy.id);

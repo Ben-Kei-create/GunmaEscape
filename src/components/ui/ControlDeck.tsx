@@ -5,8 +5,22 @@ import { hapticsManager } from '../../systems/HapticsManager';
 import SwipeCard from './SwipeCard';
 
 const ControlDeck = () => {
-  const { currentMode, setMode, triggerDiceRoll, startNewGame } = useGameStore();
+  // ============================================
+  // 1. ALL HOOKS AT THE TOP (UNCONDITIONAL)
+  // ============================================
+  const {
+    currentMode,
+    setMode,
+    triggerDiceRoll,
+    startNewGame,
+    battleState,
+    diceRollResult,
+    diceRollResult2
+  } = useGameStore();
 
+  // ============================================
+  // 2. EVENT HANDLERS
+  // ============================================
   const handleBattleMode = () => {
     soundManager.playSe('button_click');
     hapticsManager.lightImpact();
@@ -32,6 +46,19 @@ const ControlDeck = () => {
     setMode('collection');
   };
 
+  const handleNewGame = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.mediumImpact();
+    startNewGame();
+    usePlayerStore.setState({ hp: 100, maxHp: 100 });
+    soundManager.playBgm('exploration');
+  };
+
+  // ============================================
+  // 3. CONDITIONAL RENDERING (AFTER ALL HOOKS)
+  // ============================================
+
+  // Exploration Mode
   if (currentMode === 'exploration') {
     return (
       <div className="w-full h-full glass crt-scanline">
@@ -40,10 +67,10 @@ const ControlDeck = () => {
     );
   }
 
+  // Battle Mode
   if (currentMode === 'battle') {
-    const { battleState, diceRollResult, diceRollResult2 } = useGameStore();
     const canRoll = battleState?.turn === 'player' && diceRollResult === null && diceRollResult2 === null;
-    
+
     return (
       <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
         <div className="text-center mb-2">
@@ -71,6 +98,7 @@ const ControlDeck = () => {
     );
   }
 
+  // Game Over Mode
   if (currentMode === 'gameover') {
     return (
       <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
@@ -95,6 +123,7 @@ const ControlDeck = () => {
     );
   }
 
+  // Default/Menu Mode
   return (
     <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
       <div className="text-center mb-2">
@@ -115,7 +144,6 @@ const ControlDeck = () => {
                        hover:bg-gunma-accent/10 hover:border-gunma-accent/50
                        active:scale-95 transition-all duration-150
                        disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentMode === 'exploration'}
           >
             探索
           </button>
@@ -127,7 +155,6 @@ const ControlDeck = () => {
                        hover:bg-gunma-accent/10 hover:border-gunma-accent/50
                        active:scale-95 transition-all duration-150
                        disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={currentMode === 'battle'}
           >
             バトル
           </button>
@@ -144,13 +171,7 @@ const ControlDeck = () => {
         </button>
 
         <button
-          onClick={() => {
-            soundManager.playSe('button_click');
-            hapticsManager.mediumImpact();
-            startNewGame();
-            usePlayerStore.setState({ hp: 100, maxHp: 100 });
-            soundManager.playBgm('exploration');
-          }}
+          onClick={handleNewGame}
           className="w-full px-6 py-3 bg-red-500/20 border border-red-500/50 rounded-lg 
                      text-red-400 font-mono text-sm font-bold
                      hover:bg-red-500/30 hover:border-red-500
@@ -164,4 +185,3 @@ const ControlDeck = () => {
 };
 
 export default ControlDeck;
-
