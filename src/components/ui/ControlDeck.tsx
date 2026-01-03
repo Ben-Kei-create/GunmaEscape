@@ -1,0 +1,123 @@
+import { useGameStore } from '../../stores/gameStore';
+import SwipeCard from './SwipeCard';
+
+const ControlDeck = () => {
+  const { currentMode, setMode, triggerDiceRoll } = useGameStore();
+
+  const handleBattleMode = () => {
+    setMode('battle');
+  };
+
+  const handleExplorationMode = () => {
+    setMode('exploration');
+  };
+
+  const handleRollDice = () => {
+    triggerDiceRoll();
+  };
+
+  if (currentMode === 'exploration') {
+    return (
+      <div className="w-full h-full glass crt-scanline">
+        <SwipeCard />
+      </div>
+    );
+  }
+
+  if (currentMode === 'battle') {
+    const { battleState, diceRollResult, diceRollResult2 } = useGameStore();
+    const canRoll = battleState?.turn === 'player' && diceRollResult === null && diceRollResult2 === null;
+    
+    return (
+      <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
+        <div className="text-center mb-2">
+          <div className="text-xs text-gunma-accent opacity-70 mb-1">
+            [BATTLE MODE]
+          </div>
+          <div className="text-xs text-gunma-text opacity-50">
+            {battleState?.turn === 'player' ? 'ダイスを振って攻撃' : '敵のターン...'}
+          </div>
+        </div>
+
+        <button
+          onClick={handleRollDice}
+          disabled={!canRoll}
+          className="w-full max-w-md px-8 py-6 bg-gunma-konnyaku border-2 border-gunma-accent rounded-lg 
+                     text-gunma-accent font-mono text-xl font-bold
+                     hover:bg-gunma-accent/20 hover:border-gunma-accent
+                     active:scale-95 transition-all duration-150
+                     shadow-lg shadow-gunma-accent/20
+                     disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          [ ROLL DICE ]
+        </button>
+      </div>
+    );
+  }
+
+  if (currentMode === 'gameover') {
+    return (
+      <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
+        <div className="text-center mb-4">
+          <div className="text-2xl text-red-500 font-bold mb-2 glitch-text">
+            GAME OVER
+          </div>
+          <div className="text-sm text-gunma-text opacity-70">
+            グンマーから逃げられなかった...
+          </div>
+        </div>
+        <button
+          onClick={handleExplorationMode}
+          className="px-6 py-3 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+                     text-gunma-accent font-mono text-sm
+                     hover:bg-gunma-accent/10 hover:border-gunma-accent/50
+                     active:scale-95 transition-all duration-150"
+        >
+          タイトルに戻る
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
+      <div className="text-center mb-2">
+        <div className="text-xs text-gunma-accent opacity-70 mb-1">
+          [CONTROL DECK]
+        </div>
+        <div className="text-xs text-gunma-text opacity-50">
+          Mode: {currentMode.toUpperCase()}
+        </div>
+      </div>
+
+      <div className="flex gap-4 w-full max-w-md">
+        <button
+          onClick={handleExplorationMode}
+          className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+                     text-gunma-accent font-mono text-sm font-bold
+                     hover:bg-gunma-accent/10 hover:border-gunma-accent/50
+                     active:scale-95 transition-all duration-150
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentMode === 'exploration'}
+        >
+          探索
+        </button>
+
+        <button
+          onClick={handleBattleMode}
+          className="flex-1 px-6 py-4 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg 
+                     text-gunma-accent font-mono text-sm font-bold
+                     hover:bg-gunma-accent/10 hover:border-gunma-accent/50
+                     active:scale-95 transition-all duration-150
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={currentMode === 'battle'}
+        >
+          バトル
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default ControlDeck;
+

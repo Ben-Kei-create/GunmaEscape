@@ -1,0 +1,32 @@
+{
+  "events": [
+    {
+      "id": "event_001",
+      "type": "enemy",
+      "title": "こんにゃくモンスター",
+      "description": "道を塞いでいる巨大なこんにゃくモンスターがこちらを見ている...",
+      "image": "/assets/images/konnyaku_monster.png",
+      "onSwipeRight": "battle_start",
+      "onSwipeLeft": "escape_success"
+    },
+    {
+      "id": "event_002",
+      "type": "story",
+      "title": "謎の村人",
+      "description": "山道で出会った村人が何か言いたげな様子でこちらを見ている。",
+      "image": "/assets/images/villager.png",
+      "onSwipeRight": "talk_villager",
+      "onSwipeLeft": "ignore_villager"
+    },
+    {
+      "id": "event_003",
+      "type": "item",
+      "title": "秘湯発見",
+      "description": "森の奥に隠された温泉を見つけた。入ると体力が回復しそうだ。",
+      "image": "/assets/images/hotspring.png",
+      "onSwipeRight": "heal_full",
+      "onSwipeLeft": "skip_hotspring"
+    }
+  ]
+}
+
