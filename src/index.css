@@ -6,6 +6,17 @@
   /* iOS Safe Area Variables */
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
+
+  /* Neo-Gunma Colors */
+  --gunma-bg: #000000;
+  --gunma-text: #e0e0e0;
+  --gunma-accent: #39ff14;
+  /* Neon Green */
+  --gunma-magenta: #ff00ff;
+  /* Toxic Magenta */
+
+  --shadow-neon: 0 0 5px var(--gunma-accent), 0 0 10px var(--gunma-accent);
+  --shadow-magenta: 0 0 5px var(--gunma-magenta), 0 0 10px var(--gunma-magenta);
 }
 
 * {
@@ -120,4 +131,42 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #2dd012;
+}
+
+/* Neo-Gunma Animations */
+@keyframes matrix-flow {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}
+
+.matrix-bg {
+  background-image: linear-gradient(0deg, transparent 25%, rgba(57, 255, 20, 0.05) 50%, transparent 75%);
+  background-size: 100% 50%;
+  animation: matrix-flow 10s linear infinite;
+  pointer-events: none;
+}
+
+.text-neon {
+  text-shadow: var(--shadow-neon);
+}
+
+.border-warning {
+  background: repeating-linear-gradient(45deg,
+      #facc15,
+      #facc15 10px,
+      #000 10px,
+      #000 20px);
+  border: 4px solid #facc15;
+  box-shadow: 0 0 10px #facc15;
 }

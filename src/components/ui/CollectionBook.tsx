@@ -75,7 +75,11 @@ const CollectionBook = () => {
               onClick={() => {
                 soundManager.playSe('button_click');
                 hapticsManager.lightImpact();
-                setMode('exploration');
+                if (useGameStore.getState().collectionSource === 'title') {
+                  useGameStore.getState().setIsTitleVisible(true);
+                } else {
+                  setMode('exploration');
+                }
               }}
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded text-white font-semibold transition-colors"
             >

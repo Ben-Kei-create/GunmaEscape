@@ -104,7 +104,7 @@ export class BattleSystem {
     });
   }
 
-  processPlayerAttack(dice1: number, dice2: number): number {
+  processPlayerAttack(results: number[]): number {
     const gameState = this.gameStore.getState();
     const battleState = gameState.battleState;
 
@@ -122,27 +122,42 @@ export class BattleSystem {
       }
     });
 
-    // Apply minimum dice value (e.g., Kunisada Chuji or Haruna Mountain)
-    const adjustedDice1 = Math.max(dice1, minDiceValue);
-    const adjustedDice2 = Math.max(dice2, minDiceValue);
+    // Apply minimum dice value
+    const adjustedResults = results.map(r => Math.max(r, minDiceValue));
 
-    if (dice1 < minDiceValue || dice2 < minDiceValue) {
+    if (results.some(r => r < minDiceValue)) {
       const card = activeCards.find(c => c.effect.type === 'dice_min');
       if (card) {
         this.gameStore.getState().addLog(`> ${card.name}の効果: ダイスの最小値が${minDiceValue}になった`, 'battle');
       }
     }
 
-    const isCritical = adjustedDice1 === adjustedDice2;
-    let baseDamage = adjustedDice1 + adjustedDice2;
+    // Calculate sum of dice
+    const diceSum = adjustedResults.reduce((sum, r) => sum + r, 0);
+    let baseDamage = diceSum;
+
+    // Check for criticals (matches or 6s)
+    const isAllSame = adjustedResults.length > 1 && adjustedResults.every(r => r === adjustedResults[0]);
+    const hasSixMatch = adjustedResults.length > 1 && adjustedResults.filter(r => r === 6).length >= 2;
+    const isAllSix = adjustedResults.every(r => r === 6);
+
+    let multiplier = 1.0;
+    let criticalType: 'none' | 'match' | 'six' | 'god' = 'none';
+
+    if (isAllSix) {
+      multiplier = 5.0;
+      criticalType = 'god';
+    } else if (hasSixMatch) {
+      multiplier = 3.0;
+      criticalType = 'six';
+    } else if (isAllSame) {
+      multiplier = 2.0;
+      criticalType = 'match';
+    }
 
     // Equipment bonus (placeholder)
     const equipmentBonus = 1.0;
-    baseDamage = Math.floor(baseDamage * equipmentBonus);
-
-    if (isCritical) {
-      baseDamage *= 2;
-    }
+    baseDamage = Math.floor(baseDamage * multiplier * equipmentBonus);
 
     const finalDamage = Math.max(1, baseDamage);
     const newEnemyHp = Math.max(0, battleState.enemy.hp - finalDamage);
@@ -155,12 +170,19 @@ export class BattleSystem {
           ...battleState.enemy!,
           hp: newEnemyHp,
         },
-        playerDice1: dice1,
-        playerDice2: dice2,
         lastPlayerDamage: finalDamage,
         turn: 'enemy',
       },
     });
+
+    if (criticalType !== 'none') {
+      const logs: Record<string, string> = {
+        'match': `> ZOROME! ${adjustedResults.join('-')} ダメージ2倍!`,
+        'six': `> GUNMA 666! ダメージ3倍!`,
+        'god': `> GOD GUNMA! ダメージ5倍!`,
+      };
+      this.gameStore.getState().addLog(logs[criticalType], 'critical');
+    }
 
     return finalDamage;
   }

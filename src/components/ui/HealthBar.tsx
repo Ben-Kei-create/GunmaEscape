@@ -21,26 +21,38 @@ const HealthBar = () => {
       <div className="text-xs text-gunma-accent opacity-70 mb-1 text-center">
         [HP: {Math.floor(displayHp)}/{maxHp}]
       </div>
-      <div className="w-full h-6 bg-gunma-konnyaku border border-gunma-accent/30 rounded-lg overflow-hidden relative">
+      <div className="w-full h-8 bg-black border-2 border-gunma-accent rounded overflow-hidden relative shadow-neon">
+        {/* Grid Background */}
+        <div className="absolute inset-0 opacity-20"
+          style={{ backgroundImage: 'linear-gradient(90deg, transparent 95%, #39ff14 95%)', backgroundSize: '10px 100%' }} />
+
         <motion.div
-          className={`h-full ${isLow ? 'bg-red-500' : 'bg-green-500'}`}
+          className="h-full relative"
           initial={{ width: `${(hp / maxHp) * 100}%` }}
           animate={{ width: `${percentage}%` }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
           style={{
-            background: isLow 
-              ? 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'
-              : 'linear-gradient(90deg, #22c55e 0%, #16a34a 100%)',
-            boxShadow: isLow 
-              ? '0 0 10px rgba(239, 68, 68, 0.5)'
-              : '0 0 10px rgba(34, 197, 94, 0.3)',
+            background: isLow
+              ? 'linear-gradient(90deg, #ff00ff 0%, #ff0000 100%)'
+              : 'linear-gradient(90deg, #39ff14 0%, #2dd012 100%)',
           }}
+        >
+          {/* Gloss Highlight */}
+          <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20" />
+        </motion.div>
+
+        {/* ECG Scanner Line */}
+        <motion.div
+          className="absolute top-0 bottom-0 w-8 bg-gradient-to-r from-transparent via-white/80 to-transparent skew-x-12"
+          animate={{ left: ['-20%', '120%'] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         />
+
         {isLow && (
           <motion.div
-            className="absolute inset-0 bg-red-500 opacity-20"
-            animate={{ opacity: [0.2, 0.4, 0.2] }}
-            transition={{ duration: 1, repeat: Infinity }}
+            className="absolute inset-0 bg-gunma-magenta mix-blend-overlay"
+            animate={{ opacity: [0, 0.5, 0] }}
+            transition={{ duration: 0.5, repeat: Infinity }}
           />
         )}
       </div>

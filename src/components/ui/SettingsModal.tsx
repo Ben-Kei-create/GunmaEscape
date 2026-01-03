@@ -130,8 +130,8 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                 <button
                                     onClick={handleVibrationToggle}
                                     className={`w-14 h-7 rounded-full transition-colors duration-200 ${settings.vibrationEnabled
-                                            ? 'bg-gunma-accent'
-                                            : 'bg-gray-600'
+                                        ? 'bg-gunma-accent'
+                                        : 'bg-gray-600'
                                         }`}
                                 >
                                     <div
@@ -145,42 +145,60 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         {/* Divider */}
                         <div className="border-t border-gunma-accent/30 my-6" />
 
-                        {/* Reset Data */}
-                        {!showResetConfirm ? (
+                        {/* Actions */}
+                        <div className="space-y-3">
                             <button
-                                onClick={() => setShowResetConfirm(true)}
-                                className="w-full py-3 bg-red-500/20 border border-red-500/50 rounded-lg
+                                onClick={() => {
+                                    if (window.confirm('タイトルへ戻りますか？\n（現在の進行状況は失われます）')) {
+                                        useGameStore.getState().setIsTitleVisible(true);
+                                        onClose();
+                                    }
+                                }}
+                                className="w-full py-3 bg-gunma-accent/10 border border-gunma-accent/50 rounded-lg
+                                         text-gunma-accent font-mono text-sm
+                                         hover:bg-gunma-accent/20 hover:border-gunma-accent
+                                         active:scale-95 transition-all duration-150"
+                            >
+                                🏠 タイトルへ戻る
+                            </button>
+
+                            {/* Reset Data */}
+                            {!showResetConfirm ? (
+                                <button
+                                    onClick={() => setShowResetConfirm(true)}
+                                    className="w-full py-3 bg-red-500/20 border border-red-500/50 rounded-lg
                            text-red-400 font-mono text-sm
                            hover:bg-red-500/30 hover:border-red-500
                            active:scale-95 transition-all duration-150"
-                            >
-                                🗑️ データを初期化
-                            </button>
-                        ) : (
-                            <div className="space-y-3">
-                                <p className="text-red-400 text-sm font-mono text-center">
-                                    本当に全てのデータを削除しますか？
-                                </p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowResetConfirm(false)}
-                                        className="flex-1 py-2 bg-gray-600 border border-gray-500 rounded-lg
+                                >
+                                    🗑️ データを初期化
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    <p className="text-red-400 text-sm font-mono text-center">
+                                        本当に全てのデータを削除しますか？
+                                    </p>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={() => setShowResetConfirm(false)}
+                                            className="flex-1 py-2 bg-gray-600 border border-gray-500 rounded-lg
                                text-gray-300 font-mono text-sm
                                hover:bg-gray-500 active:scale-95 transition-all"
-                                    >
-                                        キャンセル
-                                    </button>
-                                    <button
-                                        onClick={handleResetData}
-                                        className="flex-1 py-2 bg-red-600 border border-red-500 rounded-lg
+                                        >
+                                            キャンセル
+                                        </button>
+                                        <button
+                                            onClick={handleResetData}
+                                            className="flex-1 py-2 bg-red-600 border border-red-500 rounded-lg
                                text-white font-mono text-sm
                                hover:bg-red-500 active:scale-95 transition-all"
-                                    >
-                                        削除する
-                                    </button>
+                                        >
+                                            削除する
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </motion.div>
                 </motion.div>
             )}

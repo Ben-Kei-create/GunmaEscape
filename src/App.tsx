@@ -13,6 +13,8 @@ import FloatingTextDisplay from './components/ui/FloatingText';
 import VictoryScreen from './components/ui/VictoryScreen';
 import TutorialOverlay from './components/ui/TutorialOverlay';
 import RippleContainer from './components/ui/RippleContainer';
+import GunmaTicker from './components/ui/GunmaTicker';
+import QuickInventory from './components/ui/QuickInventory';
 import { useGameStore } from './stores/gameStore';
 import { soundManager } from './systems/SoundManager';
 import { hapticsManager } from './systems/HapticsManager';
@@ -66,13 +68,16 @@ function App() {
                 filter: criticalFlash ? 'invert(1) brightness(1.5)' : 'none',
               }}
             >
+              {/* Matrix Background */}
+              <div className="absolute inset-0 matrix-bg pointer-events-none z-0" />
+
               {/* Settings Button (top-right) */}
               <button
                 onClick={handleSettingsClick}
-                className="absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center
+                className="absolute top-3 right-3 z-30 w-10 h-10 flex items-center justify-center
                            bg-black/50 border border-gunma-accent/50 rounded-full
                            text-gunma-accent hover:bg-gunma-accent/20 hover:border-gunma-accent
-                           active:scale-90 transition-all duration-150"
+                           active:scale-90 transition-all duration-150 shadow-neon"
               >
                 ⚙️
               </button>
@@ -96,20 +101,28 @@ function App() {
               {/* Floating Damage Text */}
               <FloatingTextDisplay />
 
-              {/* Top 40%: Visual Area (Phaser Canvas) */}
-              <div className="relative" style={{ height: '40vh', minHeight: '40vh' }}>
+              {/* Top 45%: Visual Area (Phaser Canvas) */}
+              <div className="relative z-10" style={{ height: '45vh', minHeight: '40vh' }}>
                 <GameCanvas />
               </div>
 
-              {/* Mid 30%: Log/Message Area */}
-              <div className="relative" style={{ height: '30vh', minHeight: '30vh' }}>
-                <LogArea />
+              {/* Mid 25%: Dual-Pane Command Center (Log & Gear) */}
+              <div className="relative z-20 px-2 py-2 flex gap-2" style={{ height: '25vh' }}>
+                {/* Left: Log Monitor (70%) */}
+                <div className="flex-[7] h-full rounded-xl overflow-hidden glass shadow-lg border border-gunma-accent/30 relative">
+                  <LogArea />
+                </div>
+
+                {/* Right: Quick Inventory (30%) */}
+                <div className="flex-[3] h-full rounded-xl overflow-hidden glass shadow-lg border border-gunma-accent/30 p-2 relative">
+                  <QuickInventory />
+                </div>
               </div>
 
               {/* Bottom 30%: Control Deck */}
-              <div className="relative" style={{ height: '30vh', minHeight: '30vh' }}>
+              <div className="relative z-30" style={{ height: '30vh' }}>
                 <ControlDeck />
-                <div className="absolute top-2 left-0 right-0">
+                <div className="absolute top-[-12px] left-0 right-0 z-40">
                   <HealthBar />
                 </div>
               </div>
@@ -132,6 +145,9 @@ function App() {
 
         {/* Save Indicator */}
         {!isTitleVisible && <SaveIndicator />}
+
+        {/* Global Footer Ticker */}
+        <GunmaTicker />
       </div>
     </>
   );

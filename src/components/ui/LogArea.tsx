@@ -41,10 +41,10 @@ const LogArea = () => {
   return (
     <div
       ref={logRef}
-      className="w-full h-full glass crt-scanline overflow-y-auto p-4 relative"
-      style={{ scrollBehavior: 'smooth', background: 'rgba(0, 0, 0, 0.8)' }}
+      className="w-full h-full overflow-y-auto p-2 relative"
+      style={{ scrollBehavior: 'smooth' }}
     >
-      <div className="space-y-2 font-mono text-base leading-relaxed tracking-wide">
+      <div className="space-y-1 font-mono text-sm leading-relaxed tracking-wide">
         {logs.map((log, index) => (
           <div
             key={index}

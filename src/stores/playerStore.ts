@@ -7,6 +7,7 @@ interface PlayerStore extends PlayerState {
   addItem: (item: string) => void;
   removeItem: (item: string) => void;
   setLocation: (location: string) => void;
+  heal: (amount: number) => void;
 }
 
 export const usePlayerStore = create<PlayerStore>((set) => ({
@@ -18,11 +19,14 @@ export const usePlayerStore = create<PlayerStore>((set) => ({
   location: 'Myogi_Mt_Layer1',
   setHp: (hp) => set({ hp }),
   setSanity: (sanity) => set({ sanity }),
-  addItem: (item) => set((state) => ({ 
-    inventory: [...state.inventory, item] 
+  heal: (amount) => set((state) => ({
+    hp: Math.min(state.maxHp, state.hp + amount)
   })),
-  removeItem: (item) => set((state) => ({ 
-    inventory: state.inventory.filter(i => i !== item) 
+  addItem: (item) => set((state) => ({
+    inventory: [...state.inventory, item]
+  })),
+  removeItem: (item) => set((state) => ({
+    inventory: state.inventory.filter(i => i !== item)
   })),
   setLocation: (location) => set({ location }),
 }));

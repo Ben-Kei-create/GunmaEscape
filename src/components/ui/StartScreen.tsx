@@ -113,15 +113,22 @@ const StartScreen: React.FC = () => {
             <div className="z-10 flex flex-col gap-6 w-64">
                 <button
                     onClick={startNewGame}
-                    className="w-full py-4 border-2 border-gunma-lime text-gunma-lime hover:bg-gunma-lime hover:text-black transition-all duration-300 font-bold text-xl tracking-widest shadow-[0_0_10px_rgba(57,255,20,0.5)]"
+                    className="w-full py-4 border-2 border-gunma-accent text-gunma-accent hover:bg-gunma-accent hover:text-black transition-all duration-300 font-bold text-xl tracking-widest shadow-neon"
                 >
                     GAME START
+                </button>
+
+                <button
+                    onClick={() => useGameStore.getState().openCollection('title')}
+                    className="w-full py-3 border border-gunma-magenta text-gunma-magenta hover:bg-gunma-magenta hover:text-black transition-all duration-300 font-bold tracking-widest"
+                >
+                    ZUKAN
                 </button>
 
                 {savePoint && (
                     <button
                         onClick={continueFromSavePoint}
-                        className="w-full py-3 border border-gray-500 text-gray-400 hover:border-gunma-lime hover:text-gunma-lime transition-all duration-300 font-bold tracking-widest"
+                        className="w-full py-3 border border-gray-500 text-gray-400 hover:border-gunma-accent hover:text-gunma-accent transition-all duration-300 font-bold tracking-widest"
                     >
                         CONTINUE
                     </button>

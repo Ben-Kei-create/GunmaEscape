@@ -21,10 +21,21 @@ interface GameStore extends GameState {
   rollDiceRequest: boolean;
   triggerDiceRoll: () => void;
   clearDiceRollRequest: () => void;
+  stopDiceRequest: boolean;
+  triggerDiceStop: () => void;
+  clearDiceStopRequest: () => void;
   diceRollResult: number | null;
   diceRollResult2: number | null;
   setDiceRollResult: (result: number) => void;
   setDiceRollResult2: (result: number) => void;
+  // Slot Battle System
+  playerDiceCount: number;
+  upgradeDiceCount: () => void;
+  diceResults: number[];
+  setDiceResults: (results: number[]) => void;
+  slotState: 'idle' | 'spinning' | 'stopped';
+  setSlotState: (state: 'idle' | 'spinning' | 'stopped') => void;
+  triggerAttack: () => void; // request stop
   logs: LogEntry[];
   addLog: (message: string, type?: LogEntry['type']) => void;
   clearLogs: () => void;
@@ -72,6 +83,8 @@ interface GameStore extends GameState {
   gunmaModeTaps: number;
   incrementGunmaModeTaps: () => void;
   resetGunmaModeTaps: () => void;
+  collectionSource: 'title' | 'game' | null;
+  openCollection: (source: 'title' | 'game') => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -85,8 +98,12 @@ export const useGameStore = create<GameStore>()(
       currentScenarioId: null,
       savePoint: null,
       rollDiceRequest: false,
+      stopDiceRequest: false,
       diceRollResult: null,
       diceRollResult2: null,
+      playerDiceCount: 1,
+      diceResults: [],
+      slotState: 'idle',
       logs: [
         { message: '> G-OS v2.3.1 起動完了', type: 'info', timestamp: Date.now() },
         { message: '> グンマー県内の異常を検出...', type: 'info', timestamp: Date.now() },
@@ -106,6 +123,13 @@ export const useGameStore = create<GameStore>()(
       hasSeenTutorial: false,
       discoveredItems: [],
       gunmaModeTaps: 0,
+
+      collectionSource: null,
+      openCollection: (source) => set({
+        currentMode: 'collection',
+        collectionSource: source,
+        isTitleVisible: false
+      }),
 
       setIsTitleVisible: (visible) => set({ isTitleVisible: visible }),
 
@@ -129,10 +153,11 @@ export const useGameStore = create<GameStore>()(
       setCurrentCard: (card) => set({ currentCard: card }),
       setBattleResult: (result) => set({ battleResult: result }),
       setBattleState: (state) => set({ battleState: state }),
-      triggerDiceRoll: () => {
-        set({ rollDiceRequest: true, diceRollResult: null, diceRollResult2: null });
-      },
-      clearDiceRollRequest: () => set({ rollDiceRequest: false }),
+      // Legacy dice roll actions removed
+      triggerDiceRoll: () => { },
+      clearDiceRollRequest: () => { },
+      triggerDiceStop: () => { },
+      clearDiceStopRequest: () => { },
       setDiceRollResult: (result: number) => {
         const current = get();
         if (current.diceRollResult === null) {
@@ -145,6 +170,12 @@ export const useGameStore = create<GameStore>()(
       setDiceRollResult2: (result: number) => {
         set({ diceRollResult2: result });
       },
+      // Slot Battle Actions
+      upgradeDiceCount: () => set((state) => ({ playerDiceCount: Math.min(state.playerDiceCount + 1, 5) })),
+      setDiceResults: (results) => set({ diceResults: results }),
+      setSlotState: (state) => set({ slotState: state }),
+      triggerAttack: () => set({ slotState: 'stopped' }), // Simplified trigger
+
       addLog: (message, type = 'info') => {
         set((state) => ({
           logs: [...state.logs, { message, type, timestamp: Date.now() }],
@@ -198,6 +229,7 @@ export const useGameStore = create<GameStore>()(
         settings: state.settings,
         hasSeenTutorial: state.hasSeenTutorial,
         discoveredItems: state.discoveredItems,
+        playerDiceCount: state.playerDiceCount,
       }),
       onRehydrateStorage: () => (state) => {
         // Show save indicator briefly on load
