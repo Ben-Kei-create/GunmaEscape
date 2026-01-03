@@ -3,6 +3,7 @@ import { usePlayerStore } from '../stores/playerStore';
 import { useCardStore } from '../stores/cardStore';
 import { BattleSystem, setVictoryCallback } from './BattleSystem';
 import { getEnemy } from '../config/enemies';
+import { soundManager } from './SoundManager';
 import type { CardEvent } from '../types';
 import chapter1Data from '../assets/data/chapter1.json';
 
@@ -51,6 +52,8 @@ export class ScenarioManager {
       // Log story text if available
       if (scenario.text) {
         this.addLog(scenario.text, 'story');
+        // Play text advance sound
+        soundManager.playSe('text_advance');
       }
     }
   }
@@ -92,6 +95,9 @@ export class ScenarioManager {
   }
 
   processCardAction(card: CardEvent, direction: 'left' | 'right'): void {
+    // Play swipe sound
+    soundManager.playSe('button_click');
+    
     // Linear scenario: always advance to next on swipe
     if (card.type === 'enemy' && card.triggerBattleId) {
       this.startBattle(card);

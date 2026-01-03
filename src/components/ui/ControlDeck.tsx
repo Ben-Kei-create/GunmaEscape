@@ -1,23 +1,34 @@
 import { useGameStore } from '../../stores/gameStore';
 import { usePlayerStore } from '../../stores/playerStore';
+import { soundManager } from '../../systems/SoundManager';
+import { hapticsManager } from '../../systems/HapticsManager';
 import SwipeCard from './SwipeCard';
 
 const ControlDeck = () => {
   const { currentMode, setMode, triggerDiceRoll, startNewGame } = useGameStore();
 
   const handleBattleMode = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
     setMode('battle');
   };
 
   const handleExplorationMode = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
     setMode('exploration');
+    soundManager.playBgm('exploration');
   };
 
   const handleRollDice = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.mediumImpact();
     triggerDiceRoll();
   };
 
   const handleOpenCollection = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
     setMode('collection');
   };
 
@@ -134,8 +145,11 @@ const ControlDeck = () => {
 
         <button
           onClick={() => {
+            soundManager.playSe('button_click');
+            hapticsManager.mediumImpact();
             startNewGame();
             usePlayerStore.setState({ hp: 100, maxHp: 100 });
+            soundManager.playBgm('exploration');
           }}
           className="w-full px-6 py-3 bg-red-500/20 border border-red-500/50 rounded-lg 
                      text-red-400 font-mono text-sm font-bold

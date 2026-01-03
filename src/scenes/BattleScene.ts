@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { useGameStore } from '../stores/gameStore';
 import { BattleSystem } from '../systems/BattleSystem';
+import { soundManager } from '../systems/SoundManager';
+import { hapticsManager } from '../systems/HapticsManager';
 
 interface DiceSprite extends Phaser.GameObjects.Container {
   body: Phaser.Physics.Arcade.Body;
@@ -86,6 +88,9 @@ export class BattleScene extends Phaser.Scene {
 
     // Display enemy info
     this.updateEnemyInfo();
+
+    // Play battle BGM
+    soundManager.playBgm('battle');
 
     // Display instruction
     this.add.text(
@@ -403,6 +408,10 @@ export class BattleScene extends Phaser.Scene {
     // Create spark particles at impact point
     this.sparkParticles.setPosition(x, y);
     this.sparkParticles.explode(8);
+    
+    // Play sound and haptic feedback
+    soundManager.playSe('dice_hit');
+    hapticsManager.lightImpact();
   }
 
   private processPlayerAttack(dice1: number, dice2: number) {
@@ -420,9 +429,15 @@ export class BattleScene extends Phaser.Scene {
       
       // Lightning effect
       this.createLightningEffect();
+      
+      // Strong haptic feedback for critical
+      hapticsManager.heavyImpact();
     } else {
       useGameStore.getState().addLog(`> ダイス: ${dice1} + ${dice2} = ${dice1 + dice2}`, 'battle');
       useGameStore.getState().addLog(`> ${damage} ダメージを与えた!`, 'damage');
+      
+      // Medium haptic for normal hit
+      hapticsManager.mediumImpact();
     }
     
     // Enemy turn after delay
@@ -478,6 +493,10 @@ export class BattleScene extends Phaser.Scene {
     useGameStore.getState().addLog(`> ${battleState.enemy!.name}の攻撃! ${damage} ダメージを受けた!`, 'damage');
     useGameStore.getState().triggerScreenShake();
     
+    // Play damage sound and strong haptic
+    soundManager.playSe('damage');
+    hapticsManager.vibrate();
+    
     // Check battle end
     const battleResult = this.battleSystem.checkBattleEnd();
     if (battleResult) {
@@ -490,6 +509,11 @@ export class BattleScene extends Phaser.Scene {
   private handleBattleEnd(result: 'victory' | 'defeat') {
     if (result === 'victory') {
       useGameStore.getState().addLog('> VICTORY! 敵を倒しました!', 'victory');
+      soundManager.playSe('win');
+      hapticsManager.notification();
+      
+      // Switch back to exploration BGM
+      soundManager.playBgm('exploration');
     } else {
       useGameStore.getState().addLog('> GAME OVER...', 'defeat');
     }
@@ -510,13 +534,24 @@ export class BattleScene extends Phaser.Scene {
         
         // Detect sudden velocity change (collision)
         if (Math.abs(this.dice1.x - prevX) > 5 || Math.abs(this.dice1.y - prevY) > 5) {
+          // Check if hitting a wall (high velocity)
           if (Math.abs(body.velocity.x) > 100 || Math.abs(body.velocity.y) > 100) {
-            this.createImpactParticles(this.dice1.x, this.dice1.y);
+            const prevVx = (this.dice1 as any).prevVx || 0;
+            const prevVy = (this.dice1 as any).prevVy || 0;
+            const vxChange = Math.abs(body.velocity.x - prevVx);
+            const vyChange = Math.abs(body.velocity.y - prevVy);
+            
+            // Sudden velocity change indicates collision
+            if (vxChange > 50 || vyChange > 50) {
+              this.createImpactParticles(this.dice1.x, this.dice1.y);
+            }
           }
         }
         
         (this.dice1 as any).prevX = this.dice1.x;
         (this.dice1 as any).prevY = this.dice1.y;
+        (this.dice1 as any).prevVx = body.velocity.x;
+        (this.dice1 as any).prevVy = body.velocity.y;
       }
       
       if (Math.abs(body.angularVelocity) > 10) {
@@ -532,10 +567,22 @@ export class BattleScene extends Phaser.Scene {
         const prevY = (this.dice2 as any).prevY || this.dice2.y;
         
         if (Math.abs(this.dice2.x - prevX) > 5 || Math.abs(this.dice2.y - prevY) > 5) {
+          // Check if hitting a wall (high velocity)
           if (Math.abs(body.velocity.x) > 100 || Math.abs(body.velocity.y) > 100) {
-            this.createImpactParticles(this.dice2.x, this.dice2.y);
+            const prevVx = (this.dice2 as any).prevVx || 0;
+            const prevVy = (this.dice2 as any).prevVy || 0;
+            const vxChange = Math.abs(body.velocity.x - prevVx);
+            const vyChange = Math.abs(body.velocity.y - prevVy);
+            
+            // Sudden velocity change indicates collision
+            if (vxChange > 50 || vyChange > 50) {
+              this.createImpactParticles(this.dice2.x, this.dice2.y);
+            }
           }
         }
+        
+        (this.dice2 as any).prevVx = body.velocity.x;
+        (this.dice2 as any).prevVy = body.velocity.y;
         
         (this.dice2 as any).prevX = this.dice2.x;
         (this.dice2 as any).prevY = this.dice2.y;

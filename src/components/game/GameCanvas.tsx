@@ -4,6 +4,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { usePlayerStore } from '../../stores/playerStore';
 import { BattleScene } from '../../scenes/BattleScene';
 import { getBackgroundForLocation } from '../../config/assets';
+import { soundManager } from '../../systems/SoundManager';
 
 class BootScene extends Phaser.Scene {
   constructor() {
@@ -13,6 +14,9 @@ class BootScene extends Phaser.Scene {
   create() {
     // Initial scene setup
     this.cameras.main.setBackgroundColor('#1a1a1a');
+    
+    // Play exploration BGM
+    soundManager.playBgm('exploration');
     
     // Placeholder text
     this.add.text(

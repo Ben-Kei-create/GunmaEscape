@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCardStore } from '../../stores/cardStore';
 import { useGameStore } from '../../stores/gameStore';
+import { soundManager } from '../../systems/SoundManager';
+import { hapticsManager } from '../../systems/HapticsManager';
 import type { LegacyCard } from '../../types';
 import legacyCardsData from '../../assets/data/legacyCards.json';
 
@@ -70,7 +72,11 @@ const CollectionBook = () => {
               収集率: {collectedCards.length}/{cards.length}
             </div>
             <button
-              onClick={() => setMode('exploration')}
+              onClick={() => {
+                soundManager.playSe('button_click');
+                hapticsManager.lightImpact();
+                setMode('exploration');
+              }}
               className="px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded text-white font-semibold transition-colors"
             >
               閉じる
@@ -88,7 +94,13 @@ const CollectionBook = () => {
                   key={card.id}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => isCollected && setSelectedCard(card)}
+                  onClick={() => {
+                    if (isCollected) {
+                      soundManager.playSe('button_click');
+                      hapticsManager.lightImpact();
+                      setSelectedCard(card);
+                    }
+                  }}
                   className={`
                     relative p-4 rounded-lg border-2 cursor-pointer
                     ${isCollected ? `${getRarityColor(card.rarity)} bg-white shadow-md` : 'border-gray-300 bg-gray-100 opacity-60'}
@@ -155,7 +167,11 @@ const CollectionBook = () => {
                   </div>
                 </div>
                 <button
-                  onClick={() => setSelectedCard(null)}
+                  onClick={() => {
+                    soundManager.playSe('button_click');
+                    hapticsManager.lightImpact();
+                    setSelectedCard(null);
+                  }}
                   className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 rounded text-white font-semibold transition-colors"
                 >
                   閉じる
