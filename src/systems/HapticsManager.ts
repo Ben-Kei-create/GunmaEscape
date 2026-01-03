@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
+import { useGameStore } from '../stores/gameStore';
 
 class HapticsManager {
   private static instance: HapticsManager | null = null;
@@ -27,8 +28,13 @@ class HapticsManager {
     }
   }
 
+  private isVibrationEnabled(): boolean {
+    const state = useGameStore.getState();
+    return state.settings?.vibrationEnabled ?? true;
+  }
+
   async impact(style: ImpactStyle = ImpactStyle.Medium): Promise<void> {
-    if (!this.isAvailable) return;
+    if (!this.isAvailable || !this.isVibrationEnabled()) return;
 
     try {
       await Haptics.impact({ style });
@@ -38,6 +44,8 @@ class HapticsManager {
   }
 
   async vibrate(duration?: number): Promise<void> {
+    if (!this.isVibrationEnabled()) return;
+
     if (Capacitor.isNativePlatform()) {
       try {
         await Haptics.vibrate();
@@ -55,7 +63,7 @@ class HapticsManager {
   }
 
   async notification(type: NotificationType = NotificationType.Success): Promise<void> {
-    if (!this.isAvailable) return;
+    if (!this.isAvailable || !this.isVibrationEnabled()) return;
 
     try {
       await Haptics.notification({ type });

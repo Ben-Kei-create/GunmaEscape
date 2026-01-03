@@ -23,6 +23,7 @@ export class BattleScene extends Phaser.Scene {
   private enemySprite: Phaser.GameObjects.Container | null = null;
   private impactParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private sparkParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+  private isProcessingEnemyTurn: boolean = false;
 
   constructor() {
     super({ key: 'BattleScene' });
@@ -212,8 +213,9 @@ export class BattleScene extends Phaser.Scene {
     this.physics.add.existing(diceContainer1);
     const body1 = diceContainer1.body as Phaser.Physics.Arcade.Body;
     body1.setSize(diceSize, diceSize);
-    body1.setBounce(0.6, 0.6);
-    body1.setFriction(0.8, 0.8);
+    body1.setBounce(0.3, 0.3);
+    body1.setFriction(1.2, 1.2);
+    body1.setDrag(400, 400);
     body1.setCollideWorldBounds(true);
     (diceContainer1 as any).numberText = numberText1;
     this.dice1 = diceContainer1;
@@ -234,8 +236,9 @@ export class BattleScene extends Phaser.Scene {
     this.physics.add.existing(diceContainer2);
     const body2 = diceContainer2.body as Phaser.Physics.Arcade.Body;
     body2.setSize(diceSize, diceSize);
-    body2.setBounce(0.6, 0.6);
-    body2.setFriction(0.8, 0.8);
+    body2.setBounce(0.3, 0.3);
+    body2.setFriction(1.2, 1.2);
+    body2.setDrag(400, 400);
     body2.setCollideWorldBounds(true);
     (diceContainer2 as any).numberText = numberText2;
     this.dice2 = diceContainer2;
@@ -297,6 +300,13 @@ export class BattleScene extends Phaser.Scene {
           // Reset dice results after processing
           useGameStore.setState({ diceRollResult: null, diceRollResult2: null });
         }
+      } else if (battleState.turn === 'enemy' && !this.isProcessingEnemyTurn) {
+        // Process enemy turn (triggered by Defend or Item commands)
+        this.isProcessingEnemyTurn = true;
+        this.time.delayedCall(500, () => {
+          this.processEnemyTurn();
+          this.isProcessingEnemyTurn = false;
+        });
       }
 
       // Check battle end
@@ -327,19 +337,19 @@ export class BattleScene extends Phaser.Scene {
     dice.setPosition(diceType === 'dice1' ? width / 2 - 80 : width / 2 + 80, height * 0.9);
     dice.setRotation(0);
 
-    // Random initial velocity
-    const velocityX = Phaser.Math.Between(-300, 300);
-    const velocityY = Phaser.Math.Between(-600, -400);
-    const angularVelocity = Phaser.Math.Between(-500, 500);
+    // Random initial velocity (reduced for more realistic physics)
+    const velocityX = Phaser.Math.Between(-200, 200);
+    const velocityY = Phaser.Math.Between(-400, -300);
+    const angularVelocity = Phaser.Math.Between(-300, 300);
 
     const body = dice.body as Phaser.Physics.Arcade.Body;
     body.setVelocity(velocityX, velocityY);
     body.setAngularVelocity(angularVelocity);
 
-    // Add damping to ensure dice eventually stops
+    // Add strong damping to ensure dice stops quickly
     body.setDamping(true);
-    body.setDrag(200, 200);
-    body.setAngularDrag(300);
+    body.setDrag(500, 500);
+    body.setAngularDrag(500);
 
     // Store reference to dice for collision detection
     (dice as any).isRolling = true;
@@ -439,6 +449,18 @@ export class BattleScene extends Phaser.Scene {
 
     // Trigger hit flash
     this.triggerHitFlash();
+
+    // Get enemy position for floating text
+    const enemyX = this.enemySprite ? this.enemySprite.x : this.cameras.main.width / 2;
+    const enemyY = this.enemySprite ? this.enemySprite.y : this.cameras.main.height * 0.3;
+
+    // Add floating damage text
+    useGameStore.getState().addFloatingText({
+      value: damage,
+      x: enemyX,
+      y: enemyY,
+      type: isCritical ? 'critical' : 'damage',
+    });
 
     if (isCritical) {
       // Critical flash effect
@@ -546,8 +568,8 @@ export class BattleScene extends Phaser.Scene {
     if (this.dice1) {
       const body = this.dice1.body as Phaser.Physics.Arcade.Body;
 
-      // Check for wall collisions to create particles
-      if (Math.abs(body.velocity.x) > 50 || Math.abs(body.velocity.y) > 50) {
+      // Check for wall collisions to create particles (reduced sensitivity)
+      if (Math.abs(body.velocity.x) > 100 || Math.abs(body.velocity.y) > 100) {
         const prevX = (this.dice1 as any).prevX || this.dice1.x;
         const prevY = (this.dice1 as any).prevY || this.dice1.y;
 
@@ -561,7 +583,7 @@ export class BattleScene extends Phaser.Scene {
             const vyChange = Math.abs(body.velocity.y - prevVy);
 
             // Sudden velocity change indicates collision
-            if (vxChange > 50 || vyChange > 50) {
+            if (vxChange > 100 || vyChange > 100) {
               this.createImpactParticles(this.dice1.x, this.dice1.y);
             }
           }
@@ -580,8 +602,8 @@ export class BattleScene extends Phaser.Scene {
     if (this.dice2) {
       const body = this.dice2.body as Phaser.Physics.Arcade.Body;
 
-      // Check for wall collisions
-      if (Math.abs(body.velocity.x) > 50 || Math.abs(body.velocity.y) > 50) {
+      // Check for wall collisions (reduced sensitivity)
+      if (Math.abs(body.velocity.x) > 100 || Math.abs(body.velocity.y) > 100) {
         const prevX = (this.dice2 as any).prevX || this.dice2.x;
         const prevY = (this.dice2 as any).prevY || this.dice2.y;
 
@@ -594,7 +616,7 @@ export class BattleScene extends Phaser.Scene {
             const vyChange = Math.abs(body.velocity.y - prevVy);
 
             // Sudden velocity change indicates collision
-            if (vxChange > 50 || vyChange > 50) {
+            if (vxChange > 100 || vyChange > 100) {
               this.createImpactParticles(this.dice2.x, this.dice2.y);
             }
           }

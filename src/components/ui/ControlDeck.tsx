@@ -67,9 +67,54 @@ const ControlDeck = () => {
     );
   }
 
+  const handleDefend = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
+
+    // Set defending state and switch to enemy turn
+    const gameState = useGameStore.getState();
+    gameState.setDefending(true);
+    gameState.addLog('> 防御態勢を取った!', 'battle');
+
+    // Update battle state to enemy turn
+    if (gameState.battleState) {
+      gameState.setBattleState({
+        ...gameState.battleState,
+        turn: 'enemy',
+      });
+    }
+  };
+
+  const handleItem = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
+    const playerState = usePlayerStore.getState();
+    const gameState = useGameStore.getState();
+
+    // Check if player has a potion
+    if (playerState.inventory.includes('potion')) {
+      // Use potion
+      const healAmount = 30;
+      const newHp = Math.min(playerState.maxHp, playerState.hp + healAmount);
+      usePlayerStore.setState({ hp: newHp });
+      playerState.removeItem('potion');
+      gameState.addLog(`> ポーションを使用! HPが${healAmount}回復した`, 'heal');
+
+      // Update battle state to enemy turn
+      if (gameState.battleState) {
+        gameState.setBattleState({
+          ...gameState.battleState,
+          turn: 'enemy',
+        });
+      }
+    }
+  };
+
   // Battle Mode
   if (currentMode === 'battle') {
     const canRoll = battleState?.turn === 'player' && diceRollResult === null && diceRollResult2 === null;
+    const playerState = usePlayerStore();
+    const hasPotion = playerState.inventory.includes('potion');
 
     return (
       <div className="w-full h-full glass crt-scanline p-4 flex flex-col items-center justify-center gap-4">
@@ -78,22 +123,51 @@ const ControlDeck = () => {
             [BATTLE MODE]
           </div>
           <div className="text-xs text-gunma-text opacity-50">
-            {battleState?.turn === 'player' ? 'ダイスを振って攻撃' : '敵のターン...'}
+            {battleState?.turn === 'player' ? 'コマンドを選択' : '敵のターン...'}
           </div>
         </div>
 
-        <button
-          onClick={handleRollDice}
-          disabled={!canRoll}
-          className="w-full max-w-md px-8 py-6 bg-gunma-konnyaku border-2 border-gunma-accent rounded-lg 
-                     text-gunma-accent font-mono text-xl font-bold
-                     hover:bg-gunma-accent/20 hover:border-gunma-accent
-                     active:scale-95 transition-all duration-150
-                     shadow-lg shadow-gunma-accent/20
-                     disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          [ ROLL DICE ]
-        </button>
+        <div className="w-full max-w-md flex flex-col gap-3">
+          {/* Attack Button */}
+          <button
+            onClick={handleRollDice}
+            disabled={!canRoll}
+            className="w-full px-8 py-6 bg-gunma-konnyaku border-2 border-gunma-accent rounded-lg 
+                       text-gunma-accent font-mono text-xl font-bold
+                       hover:bg-gunma-accent/20 hover:border-gunma-accent
+                       active:scale-95 transition-all duration-150
+                       shadow-lg shadow-gunma-accent/20
+                       disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            ⚔️ たたかう
+          </button>
+
+          {/* Defend Button */}
+          <button
+            onClick={handleDefend}
+            disabled={!canRoll}
+            className="w-full px-6 py-4 bg-gunma-konnyaku border border-blue-400/50 rounded-lg 
+                       text-blue-400 font-mono text-lg font-bold
+                       hover:bg-blue-400/10 hover:border-blue-400
+                       active:scale-95 transition-all duration-150
+                       disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            🛡️ ぼうぎょ
+          </button>
+
+          {/* Item Button */}
+          <button
+            onClick={handleItem}
+            disabled={!canRoll || !hasPotion}
+            className="w-full px-6 py-4 bg-gunma-konnyaku border border-green-400/50 rounded-lg 
+                       text-green-400 font-mono text-lg font-bold
+                       hover:bg-green-400/10 hover:border-green-400
+                       active:scale-95 transition-all duration-150
+                       disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            💊 どうぐ {!hasPotion && '(なし)'}
+          </button>
+        </div>
       </div>
     );
   }

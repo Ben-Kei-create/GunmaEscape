@@ -182,6 +182,14 @@ export class BattleSystem {
     const playerDefense = 0;
     baseDamage = Math.max(1, baseDamage - playerDefense);
 
+    // Apply defense if player is defending
+    if (gameState.isDefending) {
+      baseDamage = Math.floor(baseDamage / 2);
+      this.gameStore.getState().addLog('> 防御態勢! ダメージを半減した', 'battle');
+      // Reset defending state after use
+      this.gameStore.getState().setDefending(false);
+    }
+
     const newPlayerHp = Math.max(0, playerState.hp - baseDamage);
 
     this.playerStore.setState({ hp: newPlayerHp });

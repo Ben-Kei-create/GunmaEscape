@@ -41,6 +41,27 @@ interface GameStore extends GameState {
   continueFromSavePoint: () => void;
   isTitleVisible: boolean;
   setIsTitleVisible: (visible: boolean) => void;
+  isDefending: boolean;
+  setDefending: (defending: boolean) => void;
+  // Settings
+  settings: {
+    bgmVolume: number;
+    seVolume: number;
+    vibrationEnabled: boolean;
+  };
+  updateSettings: (settings: Partial<GameStore['settings']>) => void;
+  // Save indicator
+  isSaving: boolean;
+  // Floating text
+  floatingTexts: Array<{
+    id: string;
+    value: number;
+    x: number;
+    y: number;
+    type: 'damage' | 'heal' | 'critical';
+  }>;
+  addFloatingText: (text: { value: number; x: number; y: number; type: 'damage' | 'heal' | 'critical' }) => void;
+  removeFloatingText: (id: string) => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -64,6 +85,14 @@ export const useGameStore = create<GameStore>()(
       screenShake: false,
       criticalFlash: false,
       gameOverInfo: null,
+      isDefending: false,
+      settings: {
+        bgmVolume: 50,
+        seVolume: 70,
+        vibrationEnabled: true,
+      },
+      isSaving: false,
+      floatingTexts: [],
 
       setIsTitleVisible: (visible) => set({ isTitleVisible: visible }),
 
@@ -128,6 +157,16 @@ export const useGameStore = create<GameStore>()(
           set({ currentScenarioId: 'c1_01_intro', currentMode: 'exploration' });
         }
       },
+      setDefending: (defending) => set({ isDefending: defending }),
+      updateSettings: (newSettings) => set((state) => ({
+        settings: { ...state.settings, ...newSettings }
+      })),
+      addFloatingText: (text) => set((state) => ({
+        floatingTexts: [...state.floatingTexts, { ...text, id: Date.now().toString() + Math.random() }]
+      })),
+      removeFloatingText: (id) => set((state) => ({
+        floatingTexts: state.floatingTexts.filter(t => t.id !== id)
+      })),
     }),
     {
       name: 'gunma-game-storage',
@@ -135,7 +174,17 @@ export const useGameStore = create<GameStore>()(
       partialize: (state) => ({
         currentScenarioId: state.currentScenarioId,
         savePoint: state.savePoint,
+        settings: state.settings,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Show save indicator briefly on load
+        if (state) {
+          state.isSaving = true;
+          setTimeout(() => {
+            useGameStore.setState({ isSaving: false });
+          }, 1000);
+        }
+      },
     }
   )
 );

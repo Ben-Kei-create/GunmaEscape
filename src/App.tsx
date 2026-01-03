@@ -1,4 +1,4 @@
-// React imports removed as they are unused
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameCanvas from './components/game/GameCanvas';
 import LogArea from './components/ui/LogArea';
@@ -6,12 +6,23 @@ import ControlDeck from './components/ui/ControlDeck';
 import HealthBar from './components/ui/HealthBar';
 import GameOverScreen from './components/ui/GameOverScreen';
 import CollectionBook from './components/ui/CollectionBook';
-import StartScreen from './components/ui/StartScreen'; // Import追加
+import StartScreen from './components/ui/StartScreen';
+import SettingsModal from './components/ui/SettingsModal';
+import SaveIndicator from './components/ui/SaveIndicator';
+import FloatingTextDisplay from './components/ui/FloatingText';
 import { useGameStore } from './stores/gameStore';
+import { soundManager } from './systems/SoundManager';
+import { hapticsManager } from './systems/HapticsManager';
 
 function App() {
-  // フックは全てトップレベルで呼び出す
   const { currentMode, isTitleVisible, screenShake, criticalFlash } = useGameStore();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const handleSettingsClick = () => {
+    soundManager.playSe('button_click');
+    hapticsManager.lightImpact();
+    setIsSettingsOpen(true);
+  };
 
   return (
     <>
@@ -32,6 +43,17 @@ function App() {
               filter: criticalFlash ? 'invert(1) brightness(1.5)' : 'none',
             }}
           >
+            {/* Settings Button (top-right) */}
+            <button
+              onClick={handleSettingsClick}
+              className="absolute top-3 right-3 z-20 w-10 h-10 flex items-center justify-center
+                         bg-black/50 border border-gunma-accent/50 rounded-full
+                         text-gunma-accent hover:bg-gunma-accent/20 hover:border-gunma-accent
+                         active:scale-90 transition-all duration-150"
+            >
+              ⚙️
+            </button>
+
             {/* Critical Flash Overlay */}
             <AnimatePresence>
               {criticalFlash && (
@@ -47,6 +69,9 @@ function App() {
                 />
               )}
             </AnimatePresence>
+
+            {/* Floating Damage Text */}
+            <FloatingTextDisplay />
 
             {/* Top 40%: Visual Area (Phaser Canvas) */}
             <div className="relative" style={{ height: '40vh', minHeight: '40vh' }}>
@@ -68,12 +93,19 @@ function App() {
           </motion.div>
         )}
 
-        {/* Overlays (これらはゲーム画面の上に重なるものなので条件付きレンダリングの外または制御下に置く) */}
+        {/* Overlays */}
         {!isTitleVisible && currentMode === 'gameover' && <GameOverScreen />}
         {!isTitleVisible && currentMode === 'collection' && <CollectionBook />}
+
+        {/* Settings Modal */}
+        <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
+        {/* Save Indicator */}
+        {!isTitleVisible && <SaveIndicator />}
       </div>
     </>
   );
 }
 
 export default App;
+
