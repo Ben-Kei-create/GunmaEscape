@@ -37,7 +37,7 @@ const GunmaTicker = () => {
             .ticker-move {
                 display: inline-block;
                 white-space: nowrap;
-                animation: ticker 120s linear infinite; // Slowed down to 120s
+                animation: ticker 30s linear infinite;
             }
             .ticker-item {
                 display: inline-block;
@@ -45,10 +45,10 @@ const GunmaTicker = () => {
             }
             @keyframes ticker {
                 0% {
-                    transform: translate3d(0, 0, 0);
+                    transform: translate3d(100%, 0, 0);
                 }
                 100% {
-                    transform: translate3d(-50%, 0, 0);
+                    transform: translate3d(-100%, 0, 0);
                 }
             }
         `}</style>

@@ -197,15 +197,8 @@ export class ScenarioManager {
       return;
     }
 
-    const enemyData = getEnemy(enemyId);
-    if (!enemyData) {
-      this.addLog('> エラー: 敵データが見つかりません', 'error');
-      return;
-    }
-
-    const enemy = {
-      ...enemyData,
-    };
+    // getEnemy now always returns a valid enemy (with fallback)
+    const enemy = getEnemy(enemyId);
 
     this.battleSystem.startBattle(enemy);
     this.addLog(`> ${enemy.name}との戦闘が開始されました！`, 'battle');

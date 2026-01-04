@@ -12,6 +12,7 @@ export class BattleScene extends Phaser.Scene {
   private sparkParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
   private isProcessingTurn: boolean = false;
   private spinTimer: Phaser.Time.TimerEvent | null = null;
+  private targetText: Phaser.GameObjects.Text | null = null;
 
   constructor() {
     super({ key: 'BattleScene' });
@@ -57,8 +58,37 @@ export class BattleScene extends Phaser.Scene {
     this.updateDiceCount();
     this.setupStoreListener();
     this.updateEnemyInfo();
+    this.setupTargetDisplay();
 
     soundManager.playBgm('battle');
+  }
+
+  private setupTargetDisplay() {
+    const { width } = this.cameras.main;
+
+    // Generate random target (1-6)
+    const target = Phaser.Math.Between(1, 6);
+    useGameStore.getState().setTargetSymbol(target);
+
+    // Display target indicator
+    this.targetText = this.add.text(width / 2, 20, `🎯 TARGET: [ ${target} ]`, {
+      fontSize: '18px',
+      fontFamily: 'monospace',
+      color: '#ff0',
+      backgroundColor: 'rgba(0,0,0,0.7)',
+      padding: { x: 10, y: 5 }
+    }).setOrigin(0.5, 0);
+
+    // Pulsing animation
+    this.tweens.add({
+      targets: this.targetText,
+      scaleX: 1.1,
+      scaleY: 1.1,
+      duration: 500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
   }
 
   private createEnemySprite() {

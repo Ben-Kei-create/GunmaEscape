@@ -26,6 +26,7 @@ import DailyNoticeModal from './components/ui/DailyNoticeModal';
 import ProfileScreen from './components/ui/ProfileScreen';
 import ReelTuningScreen from './components/ui/ReelTuningScreen';
 import MemeMaker from './components/ui/MemeMaker';
+import TypewriterLog from './components/ui/TypewriterLog';
 import { useGameStore } from './stores/gameStore';
 import { usePlayerStore } from './stores/playerStore';
 import { soundManager } from './systems/SoundManager';
@@ -36,7 +37,7 @@ function App() {
   const {
     currentMode, isTitleVisible, screenShake, criticalFlash, hasSeenTutorial, setHasSeenTutorial,
     selectedItemForModal, setSelectedItemForModal, equipItem, unequipItem, equippedItems, addLog, addFloatingText,
-    logs, incrementStat
+    incrementStat
   } = useGameStore();
   const { heal } = usePlayerStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -200,33 +201,10 @@ function App() {
               {/* Separator */}
               <div className="neon-separator" />
 
-              {/* 2. TACTICS AREA (20vh) */}
-              <div className="relative w-full shrink-0 z-20 bg-black/40 backdrop-blur-sm flex flex-col justify-end pb-2 px-2 gap-2" style={{ height: '22vh' }}>
-                {/* Multi-line Log Display (3-4 lines) */}
-                <div
-                  className="w-full h-20 overflow-y-auto bg-black/60 border-l-2 border-gunma-accent/50 px-2 py-1 log-scrollbar"
-                  style={{ scrollBehavior: 'smooth' }}
-                >
-                  <div className="space-y-0.5 font-mono text-xs">
-                    {logs.slice(-6).map((log, index) => {
-                      const isRecent = index >= logs.slice(-6).length - 2;
-                      return (
-                        <div
-                          key={index}
-                          className={`${isRecent
-                              ? 'text-gunma-accent'
-                              : 'text-gray-500'
-                            } ${log.type === 'damage' ? 'text-red-400' : ''} ${log.type === 'heal' ? 'text-green-400' : ''}`}
-                        >
-                          {log.message}
-                        </div>
-                      );
-                    })}
-                    {logs.length === 0 && (
-                      <div className="text-gray-500">&gt; SYSTEM READY</div>
-                    )}
-                  </div>
-                </div>
+              {/* 2. TACTICS AREA (25vh) */}
+              <div className="relative w-full shrink-0 z-20 bg-black/40 backdrop-blur-sm flex flex-col justify-end pb-2 px-2 gap-2" style={{ height: '25vh' }}>
+                {/* Typewriter Log Display */}
+                <TypewriterLog />
 
                 {/* HP Bar */}
                 <div className="w-full relative z-20">

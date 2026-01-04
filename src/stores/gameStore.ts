@@ -103,6 +103,9 @@ interface GameStore extends GameState {
   availableReels: ReelConfig[];
   setReelDeck: (deck: (ReelConfig | null)[]) => void;
   addAvailableReel: (reel: ReelConfig) => void;
+  // Phase 40: Sniper Slot
+  targetSymbol: number | null;
+  setTargetSymbol: (symbol: number | null) => void;
   continueFromSavePoint: () => void;
   isTitleVisible: boolean;
   setIsTitleVisible: (visible: boolean) => void;
@@ -203,6 +206,9 @@ export const useGameStore = create<GameStore>()(
         { id: 'reel_defense_1', type: 'defense', name: 'ディフェンスリール', icon: '🛡️', color: '#4444ff' },
         { id: 'reel_tech_1', type: 'tech', name: 'テクノリール', icon: '⚡', color: '#ffff44' },
       ],
+      // Phase 40: Sniper Slot
+      targetSymbol: null,
+      setTargetSymbol: (symbol) => set({ targetSymbol: symbol }),
 
       collectionSource: null,
       openCollection: (source) => set({

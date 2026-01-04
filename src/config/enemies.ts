@@ -4,23 +4,52 @@ export const ENEMIES: Record<string, Enemy> = {
   'konnyaku_slime': {
     id: 'konnyaku_slime',
     name: 'こんにゃくスライム',
-    hp: 20, // 30 -> 20 (弱体化: チュートリアル用)
+    hp: 20,
     maxHp: 20,
     attack: 3,
-    defense: 0, // 1 -> 0 (ダメージ通りやすく)
+    defense: 0,
+  },
+  'cursed_daruma': {
+    id: 'cursed_daruma',
+    name: '呪われたダルマ',
+    hp: 60,
+    maxHp: 60,
+    attack: 8,
+    defense: 1,
+  },
+  'haniwa_soldier': {
+    id: 'haniwa_soldier',
+    name: '埴輪ソルジャー',
+    hp: 45,
+    maxHp: 45,
+    attack: 6,
+    defense: 2,
   },
   'boss_gunma_12': {
     id: 'boss_gunma_12',
     name: 'No.12 グンマ（暗鞍のリーダー）',
-    hp: 120, // 100 -> 120 (耐久アップ)
+    hp: 120,
     maxHp: 120,
-    attack: 12, // 8 -> 12 (攻撃力アップ: 緊張感を出す)
-    defense: 2, // 3 -> 2 (少し柔らかくして爽快感維持)
+    attack: 12,
+    defense: 2,
   },
 };
 
-export const getEnemy = (enemyId: string): Enemy | undefined => {
-  return ENEMIES[enemyId];
+export const getEnemy = (enemyId: string): Enemy => {
+  const enemy = ENEMIES[enemyId];
+  if (!enemy) {
+    console.warn(`[PHASE 39] Enemy data for '${enemyId}' not found. Using fallback.`);
+    // Return a fallback enemy so the game never crashes
+    return {
+      id: enemyId,
+      name: 'UNKNOWN_ENTITY',
+      hp: 50,
+      maxHp: 50,
+      attack: 5,
+      defense: 0,
+    };
+  }
+  return enemy;
 };
 
 
