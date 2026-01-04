@@ -246,4 +246,4 @@ export class ScenarioManager {
     return this.battleSystem;
   }
 }
-
+export const scenarioManager = new ScenarioManager();

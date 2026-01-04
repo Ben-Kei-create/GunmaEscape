@@ -2,7 +2,7 @@
 import { useGameStore } from '../../stores/gameStore';
 import { soundManager } from '../../systems/SoundManager';
 import { hapticsManager } from '../../systems/HapticsManager';
-import SwipeCard from './SwipeCard';
+
 import QuickInventory from './QuickInventory';
 
 export default function ControlDeck() {
@@ -53,23 +53,9 @@ export default function ControlDeck() {
 
   // 3. Conditional Rendering (ONLY at the very end)
 
-  // Exploration Mode: Show Swipe Interface
+  // Exploration Mode: Handled by App.tsx and ExplorationDeck
   if (currentMode === 'exploration') {
-    return (
-      <div className="w-full h-full glass crt-scanline relative">
-        <SwipeCard />
-
-        {/* Collection Button (Exploration) */}
-        <button
-          onClick={() => useGameStore.getState().openCollection('game')}
-          className="absolute bottom-4 right-4 w-12 h-12 bg-black border-2 border-gunma-accent rounded-full
-                     flex items-center justify-center text-2xl shadow-neon z-50
-                     hover:scale-110 active:scale-95 transition-transform"
-        >
-          📖
-        </button>
-      </div>
-    );
+    return null;
   }
 
   // Battle Mode: Show Slot Controls

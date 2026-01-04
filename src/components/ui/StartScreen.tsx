@@ -142,7 +142,7 @@ const StartScreen: React.FC = () => {
                 </motion.div>
 
                 {/* Interaction Area */}
-                <div className="absolute bottom-20 w-full flex flex-col items-center h-32 justify-end">
+                <div className="absolute bottom-[30vh] w-full flex flex-col items-center h-auto justify-end">
                     {!hasTapped ? (
                         <motion.div
                             initial={{ opacity: 0 }}

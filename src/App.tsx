@@ -16,6 +16,8 @@ import RippleContainer from './components/ui/RippleContainer';
 import GunmaTicker from './components/ui/GunmaTicker';
 
 import InventoryManager from './components/ui/InventoryManager';
+import SwipeCard from './components/ui/SwipeCard';
+import SwiftUIFooter from './components/ui/SwiftUIFooter';
 import CRTOverlay from './components/ui/CRTOverlay';
 import ProgressBar from './components/ui/ProgressBar';
 import TurnIndicator from './components/ui/TurnIndicator';
@@ -204,60 +206,71 @@ function App() {
                 )}
               </AnimatePresence>
 
-              {/* Floating Damage Text & Turn Indicator */}
-              <FloatingTextDisplay />
-              <TurnIndicator />
-
-              {/* 1. VISUAL AREA (40vh) */}
-              <div className="relative w-full shrink-0 z-10" style={{ height: '40vh' }}>
-                <div className="w-full h-full relative corner-cut overflow-hidden border-b-2 border-gunma-accent/50 shadow-[0_0_15px_rgba(57,255,20,0.2)]">
-                  <GameCanvas />
-                  <ProgressBar />
-                </div>
-              </div>
-
-              {/* Separator */}
-              <div className="neon-separator" />
-
-              {/* 2. TACTICS AREA (25vh) */}
-              <div className="relative w-full shrink-0 z-20 bg-black/40 backdrop-blur-sm flex flex-col justify-end pb-2 px-2 gap-2" style={{ height: '25vh' }}>
-                {/* Typewriter Log Display */}
-                <TypewriterLog />
-
-                {/* HP Bar */}
-                <div className="w-full relative z-20">
-                  <HealthBar />
-                </div>
-
-                {/* Inventory Strip */}
-                <div className="w-full h-14 bg-black/60 rounded border-2 border-gunma-accent/20 p-1 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] relative overflow-hidden">
-                  {/* Slot Effect */}
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-b from-black to-transparent opacity-50" />
-
-                </div>
-              </div>
-
-              {/* 3. COCKPIT AREA (Remaining) */}
-              <div className="relative flex-1 min-h-0 w-full z-30 overflow-hidden">
-                {/* Log History Background (Behind Cockpit) */}
-                <div className="absolute inset-0 z-0 opacity-30 pointer-events-auto p-2 overflow-hidden bg-black/80">
-                  <div className="w-full h-full mask-image-b-fade">
-                    {/* LogArea - Simple ver before tutorial, Full after */}
-                    {hasSeenTutorial ? (
-                      <LogArea />
-                    ) : (
-                      <div className="p-4 text-xs font-mono text-gray-500">
-                        SYSTEM INITIALIZING...<br />
-                        AWAITING DATA SYNC...
-                      </div>
-                    )}
+              {/* =====================================================================================
+                  BATTLE LAYER (Classic Layout)
+                  Visible only in Battle Mode
+                  ===================================================================================== */}
+              <div className={`w-full h-full flex flex-col ${currentMode === 'battle' ? 'block' : 'hidden'}`}>
+                {/* 1. VISUAL AREA (40vh) */}
+                <div className="relative w-full shrink-0 z-10" style={{ height: '40vh' }}>
+                  <div className="w-full h-full relative corner-cut overflow-hidden border-b-2 border-gunma-accent/50 shadow-[0_0_15px_rgba(57,255,20,0.2)]">
+                    {/* Battle View (Phaser) - Always mounted to preserve context */}
+                    <div className="w-full h-full absolute inset-0 bg-black">
+                      <GameCanvas />
+                    </div>
+                    {/* Shared UI */}
+                    <ProgressBar />
+                    {/* Battle Only UI */}
+                    <FloatingTextDisplay />
+                    <TurnIndicator />
                   </div>
                 </div>
 
-                {/* Control Deck (Foreground) */}
-                <div className="relative z-10 w-full h-full p-2 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-end">
-                  <ControlDeck />
+                {/* Separator */}
+                <div className="neon-separator" />
+
+                {/* 2. TACTICS AREA (25vh) */}
+                <div className="relative w-full shrink-0 z-20 bg-black/40 backdrop-blur-sm flex flex-col justify-end pb-2 px-2 gap-2" style={{ height: '25vh' }}>
+                  <TypewriterLog />
+                  <div className="w-full relative z-20">
+                    <HealthBar />
+                  </div>
                 </div>
+
+                {/* 3. COCKPIT AREA (Remaining) */}
+                <div className="relative flex-1 min-h-0 w-full z-30 overflow-hidden">
+                  {/* Log History Background */}
+                  <div className="absolute inset-0 z-0 opacity-30 pointer-events-auto p-2 overflow-hidden bg-black/80">
+                    <div className="w-full h-full mask-image-b-fade">
+                      <LogArea />
+                    </div>
+                  </div>
+                  {/* Control Deck */}
+                  <div className="relative z-10 w-full h-full p-2 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-end">
+                    <ControlDeck />
+                  </div>
+                </div>
+              </div>
+
+              {/* =====================================================================================
+                  EXPLORATION LAYER (SwiftUI Layout)
+                  Visible only in Exploration Mode
+                  ===================================================================================== */}
+              <div className={`w-full h-full flex flex-col relative ${currentMode === 'exploration' ? 'block' : 'hidden'}`}>
+                {/* Header (Status Bar + Settings) */}
+                <div className="absolute top-0 left-0 right-0 z-40 pt-[calc(env(safe-area-inset-top)+10px)] px-4">
+                  {/* Reuse HealthBar for Status (HP/Lv) */}
+                  <HealthBar />
+                </div>
+
+                {/* Main Content (SwipeCard - Full Screen) */}
+                {/* Give top/bottom padding to avoid Header/Footer overlap coverage */}
+                <div className="w-full h-full relative z-10 pt-[80px] pb-[80px]">
+                  <SwipeCard />
+                </div>
+
+                {/* SwiftUI Footer (Floating) */}
+                <SwiftUIFooter />
               </div>
             </motion.div>
           </RippleContainer>
