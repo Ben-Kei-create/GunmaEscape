@@ -4,6 +4,7 @@ import { useCardStore } from '../stores/cardStore';
 import type { Enemy } from '../types';
 import legacyCardsData from '../assets/data/legacyCards.json';
 import type { LegacyCard } from '../types';
+import { achievementManager } from './AchievementManager';
 
 // Victory callback to advance scenario
 let victoryCallback: ((enemyId: string) => void) | null = null;
@@ -136,28 +137,50 @@ export class BattleSystem {
     const diceSum = adjustedResults.reduce((sum, r) => sum + r, 0);
     let baseDamage = diceSum;
 
-    // Check for criticals (matches or 6s)
+    // Check for criticals (Yaku)
     const isAllSame = adjustedResults.length > 1 && adjustedResults.every(r => r === adjustedResults[0]);
-    const hasSixMatch = adjustedResults.length > 1 && adjustedResults.filter(r => r === 6).length >= 2;
     const isAllSix = adjustedResults.every(r => r === 6);
 
+    // Check Straight
+    let isStraight = adjustedResults.length > 1;
+    if (isStraight) {
+      const sorted = [...adjustedResults].sort((a, b) => a - b);
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] !== sorted[i - 1] + 1) {
+          isStraight = false;
+          break;
+        }
+      }
+    }
+
     let multiplier = 1.0;
-    let criticalType: 'none' | 'match' | 'six' | 'god' = 'none';
+
+    // Visual Yaku Name
+    let yakuName: string | null = null;
 
     if (isAllSix) {
       multiplier = 5.0;
-      criticalType = 'god';
-    } else if (hasSixMatch) {
-      multiplier = 3.0;
-      criticalType = 'six';
+      yakuName = 'GOD GUNMA!';
     } else if (isAllSame) {
       multiplier = 2.0;
-      criticalType = 'match';
+      yakuName = 'FEVER!!';
+    } else if (isStraight) {
+      multiplier = 1.5;
+      yakuName = 'STRAIGHT!';
     }
 
-    // Equipment bonus (placeholder)
-    const equipmentBonus = 1.0;
-    baseDamage = Math.floor(baseDamage * multiplier * equipmentBonus);
+    // Equipment bonus
+    const { equippedItems } = this.gameStore.getState();
+    let equipmentMultiplier = 1.0;
+
+    Object.values(equippedItems).forEach(item => {
+      if (item?.effectType === 'attack_boost') {
+        // value 10 -> +10% damage
+        equipmentMultiplier += (item.value / 100);
+      }
+    });
+
+    baseDamage = Math.floor(baseDamage * multiplier * equipmentMultiplier);
 
     const finalDamage = Math.max(1, baseDamage);
     const newEnemyHp = Math.max(0, battleState.enemy.hp - finalDamage);
@@ -175,13 +198,16 @@ export class BattleSystem {
       },
     });
 
-    if (criticalType !== 'none') {
-      const logs: Record<string, string> = {
-        'match': `> ZOROME! ${adjustedResults.join('-')} ダメージ2倍!`,
-        'six': `> GUNMA 666! ダメージ3倍!`,
-        'god': `> GOD GUNMA! ダメージ5倍!`,
-      };
-      this.gameStore.getState().addLog(logs[criticalType], 'critical');
+    if (yakuName) {
+      // Use window center for floating text since we don't have enemy sprite reference
+      this.gameStore.getState().addFloatingText({
+        value: yakuName,
+        x: window.innerWidth / 2,
+        y: window.innerHeight * 0.4,
+        type: 'gold_critical'
+      });
+
+      this.gameStore.getState().addLog(`> ${yakuName} ダメージ${multiplier}倍!`, 'critical');
     }
 
     return finalDamage;
@@ -200,8 +226,14 @@ export class BattleSystem {
     const enemyDice = Math.floor(Math.random() * 6) + 1;
     let baseDamage = enemyDice + battleState.enemy.attack;
 
-    // Player defense (placeholder)
-    const playerDefense = 0;
+    // Player defense (Equipment)
+    let playerDefense = 0;
+    Object.values(gameState.equippedItems).forEach(item => {
+      if (item?.effectType === 'defense_boost') {
+        playerDefense += item.value;
+      }
+    });
+
     baseDamage = Math.max(1, baseDamage - playerDefense);
 
     // Apply defense if player is defending
@@ -219,6 +251,9 @@ export class BattleSystem {
     // Apply per-turn card effects (heal effects)
     this.applyCardEffects();
 
+    // Phase 35: Enemy Interference
+    this.processEnemySkills();
+
     // Update battle state
     this.gameStore.setState({
       battleState: {
@@ -229,6 +264,44 @@ export class BattleSystem {
     });
 
     return baseDamage;
+  }
+
+  private processEnemySkills() {
+    const gameState = this.gameStore.getState();
+    const enemy = gameState.battleState?.enemy;
+    const playerDiceCount = gameState.playerDiceCount;
+
+    if (!enemy) return;
+
+    // Reset previous statuses
+    // gameState.resetReelStatuses(); // Only reset if we want fresh status each turn. Let's keep it persistent for one turn.
+    // Actually, we should probably clear it at start of player turn? 
+    // Let's assume it clears on attack execution or turn start. 
+    // For now, let's just apply new ones.
+
+    // 30% chance to trigger interference
+    if (Math.random() > 0.3) {
+      const targetIndex = Math.floor(Math.random() * playerDiceCount);
+
+      // Determine skill based on enemy type
+      if (enemy.id.includes('konnyaku')) {
+        // Konnyaku Gel: Slippery
+        gameState.setReelStatus(targetIndex, 'slippery');
+        gameState.addLog(`> ${enemy.name}はこんにゃくゲルを吐き出した！リールが滑りやすくなった！`, 'battle');
+        // Visual effect trigger handled in BattleScene via store listener
+      } else if (enemy.id.includes('daruma') || enemy.id.includes('haniwa')) {
+        // Daruma Stare / Haniwa Curse: Locked
+        gameState.setReelStatus(targetIndex, 'locked');
+        gameState.addLog(`> ${enemy.name}の呪い！リールが封印された！`, 'battle');
+        gameState.triggerCriticalFlash(); // Re-use flash for curse effect
+      } else if (enemy.id.includes('boss') || enemy.id.includes('overlord')) {
+        // Boss can use both
+        const type = Math.random() > 0.5 ? 'slippery' : 'locked';
+        gameState.setReelStatus(targetIndex, type);
+        const skillName = type === 'slippery' ? '汚染されたゲル' : '王の威圧';
+        gameState.addLog(`> ${enemy.name}の${skillName}！リールが妨害された！`, 'battle');
+      }
+    }
   }
 
   checkBattleEnd(): 'victory' | 'defeat' | null {
@@ -268,6 +341,12 @@ export class BattleSystem {
         }
       });
 
+      // Tutorial Complete Logic
+      if (!this.gameStore.getState().hasSeenTutorial) {
+        this.gameStore.getState().setHasSeenTutorial(true);
+        this.gameStore.getState().addLog('> システムが完全同期しました。全機能が解放されます。', 'story');
+      }
+
       this.gameStore.getState().addLog('> 次のエリアへ進む...', 'info');
 
       // Discover card on victory
@@ -279,6 +358,10 @@ export class BattleSystem {
       if (victoryCallback && battleState?.enemy?.id) {
         victoryCallback(battleState.enemy.id);
       }
+
+      // Phase 36: Track enemy defeats
+      this.gameStore.getState().incrementStat('enemiesDefeated');
+      achievementManager.onStatChange();
     } else if (result === 'defeat') {
       // Set game over info
       const cause = battleState?.enemy?.name || '不明な敵';
@@ -288,6 +371,10 @@ export class BattleSystem {
         location: playerState.location,
         lastDamage,
       });
+
+      // Phase 36: Track deaths
+      this.gameStore.getState().incrementStat('totalDeaths');
+      achievementManager.onStatChange();
     }
 
     this.gameStore.setState({

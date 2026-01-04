@@ -95,7 +95,8 @@
       "description": "真実の欠片",
       "text": "No.12 グンマを倒し、荷車を調べるとメモが見つかった。「ゆうまさんに連れて行かれた...」\\n\\nゆうまさんとは誰だ？グンマーの秘密は深まるばかりだ。\\n\\n― 第1章「赤城の霧」完 ―\\n\\n...おまえはグンマーからにげられない。",
       "image": "/assets/backgrounds/bg_akagi_mist.png",
-      "next": null
+      "itemGet": "gunma_passport",
+      "next": "c2_01_border_gate"
     }
   ]
 }

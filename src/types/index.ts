@@ -73,3 +73,14 @@ export interface GameState {
   battleState?: BattleState;
 }
 
+export interface Item {
+  id: string;
+  name: string;
+  icon: string;
+  type: 'heal' | 'buff' | 'equip' | 'key';
+  value: number;
+  description: string;
+  effectType?: 'attack_boost' | 'defense_boost' | 'critical_rate';
+  slot?: 'weapon' | 'armor' | 'accessory';
+}
+

@@ -1,72 +1,96 @@
 import { motion } from 'framer-motion';
 import { useGameStore } from '../../stores/gameStore';
-import { usePlayerStore } from '../../stores/playerStore';
 import { soundManager } from '../../systems/SoundManager';
-import { hapticsManager } from '../../systems/HapticsManager';
+import { Item } from '../../types';
+import { ITEM_CATALOG } from '../../data/items';
 
 const QuickInventory = () => {
-    const { addLog, addFloatingText } = useGameStore();
-    const { heal } = usePlayerStore();
+    const { equippedItems, setSelectedItemForModal, inventory, setInventoryOpen } = useGameStore();
 
-    // Mock inventory for now - effectively we give the player infinite Yakimanju for testing/fun
-    // In a real implementation this would come from an inventory helper in the store.
-    const items = [
-        { id: 'yakimanju', name: '焼きまんじゅう', icon: '🍡', type: 'heal', value: 20 },
-        { id: 'konjac', name: '味噌田楽', icon: '🍢', type: 'buff', value: 0 }
-    ];
+    // Group items by ID
+    const groupedItems = inventory.reduce((acc, id) => {
+        acc[id] = (acc[id] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
 
-    const handleItemClick = (item: any) => {
-        if (item.type === 'heal') {
-            heal(item.value);
-            soundManager.playSe('heal');
-            hapticsManager.mediumImpact();
+    const uniqueItemIds = Object.keys(groupedItems);
+    const weapon = equippedItems.weapon;
 
-            addLog(`> ${item.name}を使った！ HPが${item.value}回復！`, 'heal');
+    const handleItemClick = (item: Item) => {
+        soundManager.playSe('button_click');
+        setSelectedItemForModal(item);
+    };
 
-            // Floating text effect centered on screen or random position? 
-            // We don't have exact coordinates here easily, so let's put it in center.
-            addFloatingText({
-                value: item.value,
-                x: window.innerWidth / 2,
-                y: window.innerHeight / 2,
-                type: 'heal'
-            });
-        } else {
-            // Placeholder for other items
-            soundManager.playSe('button_click');
-            addLog(`> ${item.name}はまだ使えないようだ...`, 'info');
-        }
+    const handleOpenBag = () => {
+        soundManager.playSe('button_click');
+        setInventoryOpen(true);
     };
 
     return (
-        <div className="w-full h-full flex flex-col gap-2">
-            {/* Header */}
-            <div className="text-[10px] text-gunma-accent tracking-widest text-center border-b border-gunma-accent/30 pb-1">
-                GEAR / ITEM
-            </div>
+        <div className="w-full h-full flex items-center justify-center gap-2 px-2">
+            {/* Weapon Slot (Shortcut) */}
+            <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => weapon && handleItemClick(weapon)}
+                className={`h-12 w-12 border rounded flex items-center justify-center relative overflow-hidden group transition-all shrink-0
+                    ${weapon
+                        ? 'border-gunma-magenta bg-gunma-magenta/10 shadow-[0_0_10px_rgba(255,0,255,0.2)]'
+                        : 'border-gunma-accent/30 bg-black/40 opacity-50'}`}
+            >
+                {weapon ? (
+                    <div className="text-2xl filter drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]">
+                        {weapon.icon}
+                    </div>
+                ) : (
+                    <div className="text-xl opacity-20">⚔️</div>
+                )}
+            </motion.button>
 
-            {/* Equipment Slot (Fixed) */}
-            <div className="flex-1 border border-gunma-magenta/50 bg-black/40 rounded p-1 flex flex-col items-center justify-center relative overflow-hidden group">
-                <label className="absolute top-0 left-1 text-[8px] text-gunma-magenta">MAIN</label>
-                <div className="text-2xl filter drop-shadow-[0_0_5px_rgba(255,0,255,0.5)]">
-                    🗡️
-                </div>
-                <div className="text-[9px] text-gunma-text mt-1">風の護符</div>
-            </div>
+            {/* Separator */}
+            <div className="w-px h-8 bg-gunma-accent/30" />
 
             {/* Item Slots */}
-            {items.map((item, index) => (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+                {uniqueItemIds.slice(0, 5).map((itemId) => {
+                    const count = groupedItems[itemId];
+                    const item = ITEM_CATALOG[itemId];
+                    if (!item) return null;
+
+                    // Check if equipped in any slot
+                    const isEquipped = Object.values(equippedItems).some(e => e?.id === item.id);
+
+                    return (
+                        <motion.button
+                            key={itemId}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleItemClick(item)}
+                            className={`h-12 w-12 border rounded flex items-center justify-center relative overflow-hidden transition-colors shrink-0
+                                ${isEquipped
+                                    ? 'border-blue-400 bg-blue-900/20'
+                                    : 'border-gunma-accent/50 bg-black/40 hover:bg-gunma-accent/10 active:bg-gunma-accent/20'}`}
+                        >
+                            <div className="text-2xl">{item.icon}</div>
+
+                            {/* Quantity Badge */}
+                            {count > 1 && (
+                                <div className="absolute bottom-0 right-0 bg-black/80 text-white text-[10px] font-bold px-1 rounded-tl border-t border-l border-gunma-accent/50 leading-none shadow-md">
+                                    x{count}
+                                </div>
+                            )}
+                        </motion.button>
+                    );
+                })}
+
+                {/* BAG Button */}
                 <motion.button
-                    key={item.id}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => handleItemClick(item)}
-                    className="flex-1 border border-gunma-accent/50 bg-black/40 rounded p-1 flex flex-col items-center justify-center relative overflow-hidden hover:bg-gunma-accent/10 active:bg-gunma-accent/20 transition-colors"
+                    onClick={handleOpenBag}
+                    className="h-12 w-12 border border-gunma-accent bg-gunma-accent/20 rounded flex items-center justify-center relative overflow-hidden shrink-0 hover:bg-gunma-accent/30"
                 >
-                    <label className="absolute top-0 left-1 text-[8px] text-gunma-accent">ITEM {index + 1}</label>
-                    <div className="text-2xl">{item.icon}</div>
-                    <div className="text-[9px] text-gunma-text mt-1">{item.name}</div>
+                    <div className="text-2xl">👜</div>
+                    <div className="absolute bottom-0 w-full text-[8px] text-center font-bold bg-black/50 text-gunma-accent">BOX</div>
                 </motion.button>
-            ))}
+            </div>
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useGameStore } from '../../stores/gameStore';
 import type { CardEvent } from '../../types';
@@ -19,10 +19,22 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
   const acceptOpacity = useTransform(x, [0, 100], [0, 1]);
   const rejectOpacity = useTransform(x, [-100, 0], [1, 0]);
 
+  const { hasSeenSwipeTutorial, setHasSeenSwipeTutorial } = useGameStore();
+  const [isDragging, setIsDragging] = useState(false);
+
   // Determine if this is a story card (tap-to-advance) or action card (swipe-to-choose)
   const isStory = card.type === 'story';
 
+  const handleDragStart = () => {
+    setIsDragging(true);
+    // Mark swipe tutorial as seen on first drag
+    if (!hasSeenSwipeTutorial && !isStory) {
+      setHasSeenSwipeTutorial(true);
+    }
+  };
+
   const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
     const threshold = 100;
     if (info.offset.x > threshold) {
       onSwipe('right', card);
@@ -44,6 +56,10 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
     }
     // Non-story cards: do nothing on click (require swipe)
   };
+
+  // Get choice labels from card data or use defaults
+  const leftLabel = (card as any).choices?.left?.text || '← 逃げる';
+  const rightLabel = (card as any).choices?.right?.text || '戦う →';
 
   if (!isTop) {
     return (
@@ -79,6 +95,7 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
       drag={isStory ? false : "x"}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.2}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
       initial={{ scale: 1 }}
@@ -105,35 +122,67 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
             </motion.span>
           </div>
         ) : (
-          // Action Card: Swipe indicators
+          // Action Card: Swipe indicators with dynamic labels
           <div className="flex gap-2 text-sm text-gunma-text opacity-80 font-bold">
-            <span>← 逃げる</span>
-            <span className="ml-auto">戦う →</span>
+            <span className="text-red-400">{leftLabel}</span>
+            <span className="ml-auto text-green-400">{rightLabel}</span>
           </div>
         )}
       </div>
 
-      {/* Accept Overlay (only for non-story cards) */}
+      {/* Accept Overlay with dynamic label */}
       {!isStory && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ opacity: acceptOpacity }}
         >
-          <div className="bg-gunma-accent/20 border-4 border-gunma-accent rounded-xl px-8 py-4">
-            <span className="text-gunma-accent text-2xl font-bold glitch-text">FIGHT</span>
+          <div className="bg-green-500/20 border-4 border-green-500 rounded-xl px-8 py-4">
+            <span className="text-green-500 text-2xl font-bold">{rightLabel.replace('→', '').trim() || 'YES'}</span>
           </div>
         </motion.div>
       )}
 
-      {/* Reject Overlay (only for non-story cards) */}
+      {/* Reject Overlay with dynamic label */}
       {!isStory && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
           style={{ opacity: rejectOpacity }}
         >
           <div className="bg-red-500/20 border-4 border-red-500 rounded-xl px-8 py-4">
-            <span className="text-red-500 text-2xl font-bold">RUN</span>
+            <span className="text-red-500 text-2xl font-bold">{leftLabel.replace('←', '').trim() || 'NO'}</span>
           </div>
+        </motion.div>
+      )}
+
+      {/* Swipe Tutorial Hand Animation */}
+      {!isStory && !hasSeenSwipeTutorial && !isDragging && (
+        <motion.div
+          className="absolute inset-0 flex items-center justify-center pointer-events-none z-50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+        >
+          <motion.div
+            className="text-6xl"
+            animate={{
+              x: [-30, 30, -30],
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          >
+            👆
+          </motion.div>
+          <motion.p
+            className="absolute bottom-20 text-white text-sm font-bold bg-black/70 px-4 py-2 rounded-lg"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ← 左右にスワイプ →
+          </motion.p>
         </motion.div>
       )}
     </motion.div>
@@ -150,7 +199,7 @@ const getScenarioManager = () => {
 };
 
 const SwipeCard = () => {
-  const { currentMode, currentCard } = useGameStore();
+  const { currentMode, currentCard, hasSeenSwipeTutorial } = useGameStore();
 
   useEffect(() => {
     // Initialize scenario manager
@@ -175,6 +224,26 @@ const SwipeCard = () => {
 
   return (
     <div className="w-full h-full relative flex items-center justify-center p-4">
+      {/* Static Arrow Guides (show during tutorial) */}
+      {!hasSeenSwipeTutorial && currentCard.type !== 'story' && (
+        <>
+          <motion.div
+            className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 text-3xl font-bold z-40"
+            animate={{ opacity: [0.3, 1, 0.3], x: [-5, 0, -5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ◀
+          </motion.div>
+          <motion.div
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-green-400 text-3xl font-bold z-40"
+            animate={{ opacity: [0.3, 1, 0.3], x: [5, 0, 5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            ▶
+          </motion.div>
+        </>
+      )}
+
       <Card
         key={currentCard.id}
         card={currentCard}
@@ -187,4 +256,3 @@ const SwipeCard = () => {
 };
 
 export default SwipeCard;
-

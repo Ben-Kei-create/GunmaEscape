@@ -1,0 +1,40 @@
+{
+    "titles": [
+        {
+            "id": "t_first_death",
+            "name": "風に負けた都民",
+            "desc": "赤城おろしで力尽きた",
+            "condition": "totalDeaths >= 1"
+        },
+        {
+            "id": "t_konnyaku_slayer",
+            "name": "こんにゃく狩人",
+            "desc": "こんにゃくスライムを10体倒した",
+            "condition": "enemiesDefeated >= 10"
+        },
+        {
+            "id": "t_survivor",
+            "name": "群馬適応者",
+            "desc": "50ステップ生存した",
+            "condition": "totalSteps >= 50"
+        },
+        {
+            "id": "t_konnyaku_addict",
+            "name": "こんにゃく中毒",
+            "desc": "こんにゃくを5個食べた",
+            "condition": "konnyakuEaten >= 5"
+        },
+        {
+            "id": "t_death_dealer",
+            "name": "転生の達人",
+            "desc": "10回死亡した",
+            "condition": "totalDeaths >= 10"
+        },
+        {
+            "id": "t_explorer",
+            "name": "群馬探検家",
+            "desc": "100ステップ踏破した",
+            "condition": "totalSteps >= 100"
+        }
+    ]
+}

@@ -18,11 +18,11 @@ const GunmaTicker = () => {
     }
 
     return (
-        <div className="fixed bottom-0 left-0 w-full h-8 bg-black border-t-2 border-gunma-accent z-50 flex items-center overflow-hidden">
+        <div className="fixed top-0 left-0 w-full pt-[env(safe-area-inset-top)] bg-black/80 border-b border-gunma-accent/50 z-40 flex items-center overflow-hidden pointer-events-none">
             {/* Container for the scrolling text */}
-            <div className="ticker-wrap w-full">
+            <div className="ticker-wrap w-full py-1">
                 <div className="ticker-move">
-                    <div className="ticker-item text-gunma-accent font-mono text-sm tracking-widest whitespace-nowrap inline-block px-4">
+                    <div className="ticker-item text-gunma-accent font-mono text-xs tracking-widest whitespace-nowrap inline-block px-4 opacity-80">
                         {content} +++ {content}
                     </div>
                 </div>

@@ -1,0 +1,100 @@
+{
+    "chapter": "2",
+    "title": "奈落の関所",
+    "scenarios": [
+        {
+            "id": "c2_01_border_gate",
+            "type": "story",
+            "title": "WELCOME TO GUNMA",
+            "description": "巨大な関所が霧の向こうに...",
+            "text": "{{player}}は霧の中を歩き続けた。やがて、巨大なネオン看板が見えてきた。\\n\\n『WELCOME TO GUNMA (VISA REQUIRED)』\\n\\n...待て。ここは群馬県だ。日本国内だ。VISAとは何だ。パスポートコントロールとは何だ。\\n\\n検問所は異常なほど厳重だった。有刺鉄線、監視塔、機関銃座...いや、あれはネギを構えた兵士か？",
+            "image": "/assets/backgrounds/bg_border.png",
+            "next": "c2_02_guard_encounter"
+        },
+        {
+            "id": "c2_02_guard_encounter",
+            "type": "story",
+            "title": "警備兵との遭遇",
+            "description": "奇妙な兵士に呼び止められる",
+            "text": "「止マレ、ヨソモノ」\\n\\n警備兵がこちらに近づいてくる。その姿を見て{{player}}は目を疑った。鎧を着た...埴輪？古墳時代からタイムスリップしてきたのか？\\n\\n「グンマーパスポートヲ提示セヨ。サモナクバ...」\\n\\n埴輪の目が赤く光る。「キャベツノ肥料ト成レ」",
+            "image": "/assets/backgrounds/bg_border.png",
+            "next": "c2_03_choice"
+        },
+        {
+            "id": "c2_03_choice",
+            "type": "story",
+            "title": "選択の時",
+            "description": "どう切り抜ける？",
+            "text": "埴輪警備兵は{{player}}を睨みつけている。パスポートを持っているか？それとも別の方法を試すか？\\n\\n「サァ、ドウスル？」",
+            "image": "/assets/backgrounds/bg_border.png",
+            "choices": [
+                {
+                    "label": "パスポートを見せる",
+                    "next": "c2_04_passport_show",
+                    "condition": {
+                        "hasItem": "gunma_passport"
+                    }
+                },
+                {
+                    "label": "焼きまんじゅうで買収",
+                    "next": "c2_05_bribe",
+                    "condition": {
+                        "hasItem": "yakimanju"
+                    }
+                },
+                {
+                    "label": "強行突破！",
+                    "next": "c2_06_battle"
+                }
+            ]
+        },
+        {
+            "id": "c2_04_passport_show",
+            "type": "story",
+            "title": "パスポート提示",
+            "description": "正規ルート",
+            "text": "{{player}}はパスポートを差し出した。埴輪は無表情のまま（元から表情はないが）それを確認する。\\n\\n「...ヨシ。通レ」\\n\\n拍子抜けするほどあっさりと通過できた。でも...なぜ国内移動にパスポートが必要なんだ？",
+            "image": "/assets/backgrounds/bg_border.png",
+            "next": "c2_08_into_gunma"
+        },
+        {
+            "id": "c2_05_bribe",
+            "type": "story",
+            "title": "買収工作",
+            "description": "焼きまんじゅう外交",
+            "text": "{{player}}はポケットから焼きまんじゅうを取り出した。甘じょっぱい香りが漂う。\\n\\n「...ナ、ナンダソレハ」\\n\\n埴輪の声が僅かに震えている。目の赤い光が揺らいでいる。\\n\\n「こ、これは群馬名物、焼きまんじゅうです...」\\n\\n「ク、クレ...」\\n\\n埴輪は手を差し出した。彼らにも心はあるらしい。",
+            "image": "/assets/backgrounds/bg_border.png",
+            "itemUse": "yakimanju",
+            "next": "c2_08_into_gunma"
+        },
+        {
+            "id": "c2_06_battle",
+            "type": "enemy",
+            "title": "VS 警備埴輪",
+            "description": "古墳時代の番人",
+            "text": "「愚カナ選択ダ、ヨソモノ！」\\n\\n埴輪の体から土煙が噴き出す！古代の呪術か何かか!?\\n\\n「我ハ上毛三山ノ守護者！太田市出土ノ国宝ゾ！」\\n\\n{{player}}は身構えた。国宝と戦うことになるとは...罰当たりな気もするが、生き残りが優先だ！",
+            "image": "/assets/enemies/enemy_haniwa.png",
+            "enemyId": "haniwa_guard",
+            "triggerBattleId": "haniwa_guard",
+            "next": "c2_07_after_battle"
+        },
+        {
+            "id": "c2_07_after_battle",
+            "type": "story",
+            "title": "戦いの後",
+            "description": "埴輪を打ち破った",
+            "text": "埴輪は粉々に砕け散った。{{player}}は呼吸を整える。\\n\\n...国宝を破壊してしまった。文化庁に怒られそうだ。\\n\\nしかし今は逃げるが勝ちだ！関所のバリケードを飛び越え、{{player}}はグンマーの大地へと踏み出した！",
+            "image": "/assets/backgrounds/bg_border.png",
+            "next": "c2_08_into_gunma"
+        },
+        {
+            "id": "c2_08_into_gunma",
+            "type": "story",
+            "title": "グンマーへ",
+            "description": "真のグンマーへ足を踏み入れる",
+            "text": "関所を抜けた先に広がっていたのは...\\n\\n緑。\\n\\n果てしない緑。\\n\\nキャベツだ。\\n\\n視界の全てがキャベツで埋め尽くされている。山も谷も、全てがキャベツ。空だけがかろうじて青い。\\n\\n「ここが...グンマー...」\\n\\n{{player}}は言葉を失った。これが嬬恋村か。全国シェア50%のキャベツ王国。狂気の農業帝国。\\n\\n風が強くなってきた。嫌な予感がする。",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "next": "c3_01_cabbage_field"
+        }
+    ]
+}

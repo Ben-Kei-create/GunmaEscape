@@ -149,6 +149,65 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                         <div className="space-y-3">
                             <button
                                 onClick={() => {
+                                    soundManager.playSe('menu_open');
+                                    useGameStore.getState().setScenarioMapOpen(true);
+                                    onClose();
+                                }}
+                                className="w-full py-3 bg-blue-900/30 border border-blue-500/50 rounded-lg
+                                         text-blue-400 font-mono text-sm
+                                         hover:bg-blue-900/50 hover:border-blue-500
+                                         active:scale-95 transition-all duration-150"
+                            >
+                                📊 シナリオフローチャート
+                            </button>
+
+                            {/* Profile Button */}
+                            <button
+                                onClick={() => {
+                                    soundManager.playSe('menu_open');
+                                    window.dispatchEvent(new CustomEvent('openProfile'));
+                                    onClose();
+                                }}
+                                className="w-full py-3 bg-purple-900/30 border border-purple-500/50 rounded-lg
+                                         text-purple-400 font-mono text-sm
+                                         hover:bg-purple-900/50 hover:border-purple-500
+                                         active:scale-95 transition-all duration-150"
+                            >
+                                👤 プロフィール
+                            </button>
+
+                            {/* Reel Tuning Button */}
+                            <button
+                                onClick={() => {
+                                    soundManager.playSe('menu_open');
+                                    window.dispatchEvent(new CustomEvent('openReelTuning'));
+                                    onClose();
+                                }}
+                                className="w-full py-3 bg-orange-900/30 border border-orange-500/50 rounded-lg
+                                         text-orange-400 font-mono text-sm
+                                         hover:bg-orange-900/50 hover:border-orange-500
+                                         active:scale-95 transition-all duration-150"
+                            >
+                                🔧 リール改造
+                            </button>
+
+                            {/* Meme Maker Button */}
+                            <button
+                                onClick={() => {
+                                    soundManager.playSe('menu_open');
+                                    window.dispatchEvent(new CustomEvent('openMemeMaker'));
+                                    onClose();
+                                }}
+                                className="w-full py-3 bg-pink-900/30 border border-pink-500/50 rounded-lg
+                                         text-pink-400 font-mono text-sm
+                                         hover:bg-pink-900/50 hover:border-pink-500
+                                         active:scale-95 transition-all duration-150"
+                            >
+                                🖼️ ミームメーカー
+                            </button>
+
+                            <button
+                                onClick={() => {
                                     if (window.confirm('タイトルへ戻りますか？\n（現在の進行状況は失われます）')) {
                                         useGameStore.getState().setIsTitleVisible(true);
                                         onClose();

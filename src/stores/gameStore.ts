@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { GameState, CardEvent, BattleState } from '../types';
+import type { GameState, CardEvent, BattleState, Item } from '../types';
+import { ITEM_CATALOG, INITIAL_INVENTORY_IDS } from '../data/items';
 
 export interface LogEntry {
   message: string;
@@ -8,11 +9,34 @@ export interface LogEntry {
   timestamp: number;
 }
 
+// Phase 38: Reel Customization
+export interface ReelConfig {
+  id: string;
+  type: 'attack' | 'defense' | 'tech';
+  name: string;
+  icon: string;
+  color: string;
+}
+
 interface GameStore extends GameState {
   currentScenarioId: string | null;
   savePoint: string | null; // Last scenario ID before game over
+  inventory: string[];
+  addItem: (itemId: string) => void;
+  removeItem: (itemId: string) => void;
+  equippedItems: {
+    weapon: Item | null;
+    armor: Item | null;
+    accessory: Item | null;
+  };
+  isInventoryOpen: boolean;
+  setInventoryOpen: (isOpen: boolean) => void;
+  selectedItemForModal: Item | null;
   setCurrentScenarioId: (id: string | null) => void;
   setSavePoint: (id: string | null) => void;
+  equipItem: (item: Item) => void;
+  unequipItem: (slot: 'weapon' | 'armor' | 'accessory') => void;
+  setSelectedItemForModal: (item: Item | null) => void;
   startNewGame: () => void;
   setMode: (mode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection' | 'victory') => void;
   setCurrentCard: (card: CardEvent | undefined) => void;
@@ -35,6 +59,10 @@ interface GameStore extends GameState {
   setDiceResults: (results: number[]) => void;
   slotState: 'idle' | 'spinning' | 'stopped';
   setSlotState: (state: 'idle' | 'spinning' | 'stopped') => void;
+  // Phase 35: Battle Interference
+  reelStatuses: ('normal' | 'slippery' | 'locked')[];
+  setReelStatus: (index: number, status: 'normal' | 'slippery' | 'locked') => void;
+  resetReelStatuses: () => void;
   triggerAttack: () => void; // request stop
   logs: LogEntry[];
   addLog: (message: string, type?: LogEntry['type']) => void;
@@ -49,6 +77,32 @@ interface GameStore extends GameState {
     lastDamage: number;
   } | null;
   setGameOverInfo: (info: { cause: string; location: string; lastDamage: number }) => void;
+  // Phase 35: Progressive UI
+  hasSeenTutorial: boolean;
+  setHasSeenTutorial: (seen: boolean) => void;
+  // Phase 36: Achievement System
+  titles: string[];
+  currentTitle: string | null;
+  stats: {
+    totalDeaths: number;
+    totalSteps: number;
+    konnyakuEaten: number;
+    enemiesDefeated: number;
+  };
+  addTitle: (titleId: string) => void;
+  setCurrentTitle: (titleId: string | null) => void;
+  incrementStat: (stat: 'totalDeaths' | 'totalSteps' | 'konnyakuEaten' | 'enemiesDefeated', amount?: number) => void;
+  // Phase 36: Daily Login
+  lastLoginDate: string | null;
+  setLastLoginDate: (date: string) => void;
+  // Phase 37: Swipe Tutorial
+  hasSeenSwipeTutorial: boolean;
+  setHasSeenSwipeTutorial: (seen: boolean) => void;
+  // Phase 38: Reel Customization
+  reelDeck: (ReelConfig | null)[];
+  availableReels: ReelConfig[];
+  setReelDeck: (deck: (ReelConfig | null)[]) => void;
+  addAvailableReel: (reel: ReelConfig) => void;
   continueFromSavePoint: () => void;
   isTitleVisible: boolean;
   setIsTitleVisible: (visible: boolean) => void;
@@ -66,16 +120,14 @@ interface GameStore extends GameState {
   // Floating text
   floatingTexts: Array<{
     id: string;
-    value: number;
+    value: number | string;
     x: number;
     y: number;
-    type: 'damage' | 'heal' | 'critical';
+    type: 'damage' | 'heal' | 'critical' | 'gold_critical'; // Added gold_critical for Yaku
   }>;
-  addFloatingText: (text: { value: number; x: number; y: number; type: 'damage' | 'heal' | 'critical' }) => void;
+  addFloatingText: (text: { value: number | string; x: number; y: number; type: 'damage' | 'heal' | 'critical' | 'gold_critical' }) => void;
   removeFloatingText: (id: string) => void;
   // Tutorial
-  hasSeenTutorial: boolean;
-  setHasSeenTutorial: (seen: boolean) => void;
   // Collection/Discovery
   discoveredItems: string[];
   discoverItem: (itemId: string) => void;
@@ -85,6 +137,15 @@ interface GameStore extends GameState {
   resetGunmaModeTaps: () => void;
   collectionSource: 'title' | 'game' | null;
   openCollection: (source: 'title' | 'game') => void;
+  // Phase 33: Narrative System
+  playerName: string;
+  setPlayerName: (name: string) => void;
+  visitedNodes: string[];
+  addVisitedNode: (nodeId: string) => void;
+  isScenarioMapOpen: boolean;
+  setScenarioMapOpen: (isOpen: boolean) => void;
+  isNameEntryOpen: boolean;
+  setNameEntryOpen: (isOpen: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>()(
@@ -123,6 +184,25 @@ export const useGameStore = create<GameStore>()(
       hasSeenTutorial: false,
       discoveredItems: [],
       gunmaModeTaps: 0,
+      // Phase 36: Achievements & Daily Login
+      titles: [],
+      currentTitle: null,
+      stats: {
+        totalDeaths: 0,
+        totalSteps: 0,
+        konnyakuEaten: 0,
+        enemiesDefeated: 0,
+      },
+      lastLoginDate: null,
+      // Phase 37: Swipe Tutorial
+      hasSeenSwipeTutorial: false,
+      // Phase 38: Reel Customization
+      reelDeck: [null, null, null, null, null],
+      availableReels: [
+        { id: 'reel_attack_1', type: 'attack', name: 'アタックリール', icon: '⚔️', color: '#ff4444' },
+        { id: 'reel_defense_1', type: 'defense', name: 'ディフェンスリール', icon: '🛡️', color: '#4444ff' },
+        { id: 'reel_tech_1', type: 'tech', name: 'テクノリール', icon: '⚡', color: '#ffff44' },
+      ],
 
       collectionSource: null,
       openCollection: (source) => set({
@@ -131,10 +211,76 @@ export const useGameStore = create<GameStore>()(
         isTitleVisible: false
       }),
 
+      // Phase 33: Narrative System
+      playerName: '旅人',
+      setPlayerName: (name) => set({ playerName: name }),
+      visitedNodes: [],
+      addVisitedNode: (nodeId) => set((state) => ({
+        visitedNodes: state.visitedNodes.includes(nodeId)
+          ? state.visitedNodes
+          : [...state.visitedNodes, nodeId]
+      })),
+      isScenarioMapOpen: false,
+      setScenarioMapOpen: (isOpen) => set({ isScenarioMapOpen: isOpen }),
+      isNameEntryOpen: false,
+      setNameEntryOpen: (isOpen) => set({ isNameEntryOpen: isOpen }),
+
       setIsTitleVisible: (visible) => set({ isTitleVisible: visible }),
 
       setCurrentScenarioId: (id) => set({ currentScenarioId: id, savePoint: id }),
       setSavePoint: (id) => set({ savePoint: id }),
+
+
+      // ...
+      inventory: INITIAL_INVENTORY_IDS,
+      addItem: (itemId) => set((state) => ({ inventory: [...state.inventory, itemId] })),
+      removeItem: (itemId) => set((state) => {
+        const idx = state.inventory.indexOf(itemId);
+        if (idx === -1) return {};
+        const newInv = [...state.inventory];
+        newInv.splice(idx, 1);
+        return { inventory: newInv };
+      }),
+      equippedItems: {
+        weapon: ITEM_CATALOG['gunma_branch'],
+        armor: null,
+        accessory: null
+      },
+      isInventoryOpen: false,
+      setInventoryOpen: (isOpen) => set({ isInventoryOpen: isOpen }),
+      equipItem: (item) => {
+        const { equippedItems, addItem, removeItem } = get();
+        const slot = item.slot || 'accessory';
+        const oldItem = equippedItems[slot];
+
+        if (oldItem) {
+          addItem(oldItem.id);
+        }
+        removeItem(item.id);
+        set({
+          equippedItems: {
+            ...equippedItems,
+            [slot]: item
+          }
+        });
+        get().addLog(`> ${item.name}を装備しました`, 'info');
+      },
+      unequipItem: (slot) => {
+        const { equippedItems, addItem } = get();
+        const item = equippedItems[slot];
+        if (item) {
+          addItem(item.id);
+          set({
+            equippedItems: {
+              ...equippedItems,
+              [slot]: null
+            }
+          });
+          get().addLog(`> 装備を外しました`, 'info');
+        }
+      },
+      selectedItemForModal: null,
+      setSelectedItemForModal: (item) => set({ selectedItemForModal: item }),
 
       startNewGame: () => {
         set({
@@ -147,6 +293,12 @@ export const useGameStore = create<GameStore>()(
           diceRollResult: null,
           diceRollResult2: null,
           logs: [],
+          equippedItems: { weapon: ITEM_CATALOG['gunma_branch'], armor: null, accessory: null },
+          selectedItemForModal: null,
+          visitedNodes: ['c1_01_intro'],
+          inventory: INITIAL_INVENTORY_IDS,
+          reelStatuses: [],
+          hasSeenTutorial: false,
         });
       },
       setMode: (mode) => set({ currentMode: mode }),
@@ -175,6 +327,37 @@ export const useGameStore = create<GameStore>()(
       setDiceResults: (results) => set({ diceResults: results }),
       setSlotState: (state) => set({ slotState: state }),
       triggerAttack: () => set({ slotState: 'stopped' }), // Simplified trigger
+
+      // Phase 35: Battle Interference
+      reelStatuses: [],
+      setReelStatus: (index, status) => set((state) => {
+        const newStatuses = [...state.reelStatuses];
+        // Ensure array is long enough
+        while (newStatuses.length <= index) newStatuses.push('normal');
+        newStatuses[index] = status;
+        return { reelStatuses: newStatuses };
+      }),
+      resetReelStatuses: () => set({ reelStatuses: [] }),
+      setHasSeenTutorial: (seen) => set({ hasSeenTutorial: seen }),
+
+      // Phase 37: Swipe Tutorial
+      setHasSeenSwipeTutorial: (seen) => set({ hasSeenSwipeTutorial: seen }),
+
+      // Phase 38: Reel Customization Actions
+      setReelDeck: (deck) => set({ reelDeck: deck }),
+      addAvailableReel: (reel) => set((state) => ({
+        availableReels: [...state.availableReels, reel]
+      })),
+
+      // Phase 36: Achievement Actions
+      addTitle: (titleId) => set((state) => ({
+        titles: state.titles.includes(titleId) ? state.titles : [...state.titles, titleId]
+      })),
+      setCurrentTitle: (titleId) => set({ currentTitle: titleId }),
+      incrementStat: (stat, amount = 1) => set((state) => ({
+        stats: { ...state.stats, [stat]: state.stats[stat] + amount }
+      })),
+      setLastLoginDate: (date) => set({ lastLoginDate: date }),
 
       addLog: (message, type = 'info') => {
         set((state) => ({
@@ -211,7 +394,7 @@ export const useGameStore = create<GameStore>()(
       removeFloatingText: (id) => set((state) => ({
         floatingTexts: state.floatingTexts.filter(t => t.id !== id)
       })),
-      setHasSeenTutorial: (seen) => set({ hasSeenTutorial: seen }),
+
       discoverItem: (itemId) => set((state) => ({
         discoveredItems: state.discoveredItems.includes(itemId)
           ? state.discoveredItems
@@ -230,6 +413,10 @@ export const useGameStore = create<GameStore>()(
         hasSeenTutorial: state.hasSeenTutorial,
         discoveredItems: state.discoveredItems,
         playerDiceCount: state.playerDiceCount,
+        titles: state.titles,
+        currentTitle: state.currentTitle,
+        stats: state.stats,
+        lastLoginDate: state.lastLoginDate,
       }),
       onRehydrateStorage: () => (state) => {
         // Show save indicator briefly on load

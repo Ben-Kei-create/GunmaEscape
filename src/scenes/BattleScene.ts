@@ -18,9 +18,22 @@ export class BattleScene extends Phaser.Scene {
     this.battleSystem = new BattleSystem();
   }
 
+  preload() {
+    this.load.image('enemy_konnyaku', 'assets/enemies/enemy_konnyaku.png');
+    this.load.image('enemy_daruma', 'assets/enemies/enemy_daruma.png');
+    this.load.image('boss_gunma', 'assets/enemies/boss_gunma_12.png');
+    this.load.image('bg_battle', 'assets/backgrounds/bg_akagi_mist.png');
+    this.load.image('dice_texture', 'assets/ui/dice_texture.png');
+  }
+
   create() {
     this.cameras.main.setBackgroundColor('#1a1a1a');
     const { width, height } = this.cameras.main;
+
+    // Background
+    const bg = this.add.image(width / 2, height / 2, 'bg_battle');
+    bg.setDisplaySize(width, height);
+    bg.setAlpha(0.6); // Dim background for UI visibility
 
     // Create particle texture
     const graphics = this.add.graphics();
@@ -46,34 +59,111 @@ export class BattleScene extends Phaser.Scene {
     this.updateEnemyInfo();
 
     soundManager.playBgm('battle');
-
-    this.add.text(width / 2, height * 0.9, '[たたかう]ボタンでスロット開始', {
-      fontSize: '14px',
-      fontFamily: 'monospace',
-      color: '#39ff14',
-    }).setOrigin(0.5);
   }
 
   private createEnemySprite() {
     const { width, height } = this.cameras.main;
     const enemyContainer = this.add.container(width / 2, height * 0.35);
 
-    // Simple enemy representation
-    const enemyBody = this.add.graphics();
-    enemyBody.fillStyle(0x333333, 1);
-    enemyBody.fillCircle(0, 0, 60);
-    enemyBody.lineStyle(3, 0x39ff14, 1);
-    enemyBody.strokeCircle(0, 0, 60);
+    const { battleState } = useGameStore.getState();
+    const enemyName = battleState?.enemy?.name || '';
+    const enemyId = battleState?.enemy?.id || '';
 
-    const eye1 = this.add.graphics();
-    eye1.fillStyle(0xff0000, 1);
-    eye1.fillCircle(-25, -15, 8);
+    // Determine Sprite Key
+    let key = 'enemy_konnyaku';
+    if (enemyName.includes('ダルマ') || enemyId.includes('daruma')) key = 'enemy_daruma';
+    else if (enemyName.includes('赤城') || enemyName.includes('ボス') || enemyName.includes('Gunma') || enemyId.includes('boss')) key = 'boss_gunma';
 
-    const eye2 = this.add.graphics();
-    eye2.fillStyle(0xff0000, 1);
-    eye2.fillCircle(25, -15, 8);
+    // Phase 39: Emergency Fallback - Check if texture exists
+    let sprite: Phaser.GameObjects.Sprite | null = null;
+    let fallbackDisplay: Phaser.GameObjects.Container | null = null;
 
-    enemyContainer.add([enemyBody, eye1, eye2]);
+    if (this.textures.exists(key)) {
+      // Normal: Load sprite
+      sprite = this.add.sprite(0, 0, key);
+
+      // Scale to reasonable size (max 200px)
+      const maxSize = 200;
+      if (sprite.width > maxSize || sprite.height > maxSize) {
+        const scale = maxSize / Math.max(sprite.width, sprite.height);
+        sprite.setScale(scale);
+      }
+      enemyContainer.add(sprite);
+    } else {
+      // Fallback: Missing asset - show placeholder
+      console.warn('[PHASE 39] Missing asset:', key);
+
+      fallbackDisplay = this.add.container(0, 0);
+
+      // Red rectangle placeholder
+      const placeholder = this.add.graphics();
+      placeholder.fillStyle(0x990000, 1);
+      placeholder.fillRect(-60, -80, 120, 160);
+      placeholder.lineStyle(4, 0xff0000, 1);
+      placeholder.strokeRect(-60, -80, 120, 160);
+
+      // Glitch text
+      const glitchText = this.add.text(0, -20, 'NO IMAGE', {
+        fontSize: '20px',
+        fontFamily: 'monospace',
+        color: '#00ff00',
+        align: 'center'
+      }).setOrigin(0.5);
+
+      const glitchText2 = this.add.text(0, 10, '(GLITCH)', {
+        fontSize: '16px',
+        fontFamily: 'monospace',
+        color: '#ff00ff',
+        align: 'center'
+      }).setOrigin(0.5);
+
+      const enemyLabel = this.add.text(0, 50, enemyName || 'UNKNOWN', {
+        fontSize: '14px',
+        fontFamily: 'monospace',
+        color: '#ffffff',
+        align: 'center'
+      }).setOrigin(0.5);
+
+      fallbackDisplay.add([placeholder, glitchText, glitchText2, enemyLabel]);
+      enemyContainer.add(fallbackDisplay);
+
+      // Log warning to game
+      useGameStore.getState().addLog(`> [WARNING] 画像データ破損: ${key}`, 'error');
+    }
+
+    // Add CRT glitch effect occasionally (for both sprite and fallback)
+    this.time.addEvent({
+      delay: 2000,
+      callback: () => {
+        if (Math.random() > 0.7) {
+          if (sprite) {
+            sprite.setTint(0xff00ff);
+            sprite.setX(Math.random() * 10 - 5);
+            this.time.delayedCall(50, () => {
+              sprite?.clearTint();
+              sprite?.setX(0);
+            });
+          } else if (fallbackDisplay) {
+            fallbackDisplay.setX(Math.random() * 10 - 5);
+            this.time.delayedCall(50, () => {
+              fallbackDisplay?.setX(0);
+            });
+          }
+        }
+      },
+      loop: true
+    });
+
+    // Hover animation
+    this.tweens.add({
+      targets: sprite,
+      y: -15,
+      duration: 2000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+
     this.enemySprite = enemyContainer;
   }
 
@@ -92,30 +182,57 @@ export class BattleScene extends Phaser.Scene {
 
     for (let i = 0; i < playerDiceCount; i++) {
       // Adjusted Y position to 0.75 to be lower and avoid overlap with enemy
-      const dice = this.createSingleDice(startX + i * spacing, height * 0.75, diceSize);
+      const dice = this.createSingleDice(startX + i * spacing, height * 0.75, diceSize, i);
       this.slotDice.push(dice);
     }
   }
 
-  private createSingleDice(x: number, y: number, size: number): Phaser.GameObjects.Container {
+  private createSingleDice(x: number, y: number, size: number, index: number): Phaser.GameObjects.Container {
     const container = this.add.container(x, y);
+    const { reelDeck } = useGameStore.getState();
+    const reelConfig = reelDeck[index];
+
+    // Determine color based on reel config
+    let bgColor = 0x222222;
+    let borderColor = 0x39ff14;
+    if (reelConfig) {
+      const colorMap: Record<string, number> = {
+        'attack': 0xff4444,
+        'defense': 0x4444ff,
+        'tech': 0xffff44,
+      };
+      borderColor = colorMap[reelConfig.type] || 0x39ff14;
+    }
 
     const bg = this.add.graphics();
-    bg.fillStyle(0x222222, 1);
+    bg.fillStyle(bgColor, 1);
     bg.fillRoundedRect(-size / 2, -size / 2, size, size, 8);
-    bg.lineStyle(3, 0x39ff14, 1);
+    bg.lineStyle(3, borderColor, 1);
     bg.strokeRoundedRect(-size / 2, -size / 2, size, size, 8);
 
     const text = this.add.text(0, 0, '1', {
       fontSize: '40px',
       fontFamily: 'monospace',
-      color: '#39ff14',
+      color: `#${borderColor.toString(16).padStart(6, '0')}`,
       fontStyle: 'bold'
     }).setOrigin(0.5);
 
-    container.add([bg, text]);
+    // Status Icon (Locked/Slippery)
+    const statusText = this.add.text(0, -size / 2 - 20, '', {
+      fontSize: '24px',
+      align: 'center'
+    }).setOrigin(0.5);
+
+    // Border Graphics for highlighting (separate from bg)
+    const borderGraphics = this.add.graphics();
+
+    container.add([bg, text, statusText, borderGraphics]);
     (container as any).numberText = text;
     (container as any).bg = bg;
+    (container as any).statusText = statusText;
+    (container as any).borderGraphics = borderGraphics;
+    (container as any).size = size;
+    (container as any).reelConfig = reelConfig;
 
     return container;
   }
@@ -140,6 +257,8 @@ export class BattleScene extends Phaser.Scene {
         if (state.playerDiceCount !== this.slotDice.length) {
           this.updateDiceCount();
         }
+
+        this.updateReelVisuals();
 
         if (slotState === 'spinning') {
           if (!this.spinTimer) {
@@ -175,6 +294,33 @@ export class BattleScene extends Phaser.Scene {
       },
       loop: true
     });
+
+  }
+
+  private updateReelVisuals() {
+    const { reelStatuses } = useGameStore.getState();
+    this.slotDice.forEach((dice, index) => {
+      const status = reelStatuses[index] || 'normal';
+      const statusText = (dice as any).statusText;
+      const borderGraphics = (dice as any).borderGraphics;
+      const size = (dice as any).size;
+
+      // Clear previous border
+      borderGraphics.clear();
+
+      if (status === 'locked') {
+        statusText.setText('🔒');
+        borderGraphics.lineStyle(4, 0xff0000, 1);
+        borderGraphics.strokeRoundedRect(-size / 2, -size / 2, size, size, 8);
+      } else if (status === 'slippery') {
+        statusText.setText('💧');
+        borderGraphics.lineStyle(4, 0x00ffff, 1);
+        borderGraphics.strokeRoundedRect(-size / 2, -size / 2, size, size, 8);
+      } else {
+        statusText.setText('');
+        // No extra border for normal state (bg already has green border)
+      }
+    });
   }
 
   private startSpinning() {
@@ -185,7 +331,14 @@ export class BattleScene extends Phaser.Scene {
     this.spinTimer = this.time.addEvent({
       delay: 50,
       callback: () => {
-        this.slotDice.forEach(dice => {
+        const { reelStatuses } = useGameStore.getState();
+        this.slotDice.forEach((dice, index) => {
+          // Skip animation if locked
+          if (reelStatuses[index] === 'locked') {
+            (dice as any).numberText.setText('1');
+            return;
+          }
+
           const val = Phaser.Math.Between(1, 6);
           (dice as any).numberText.setText(val.toString());
           // Subtle scale effect
@@ -203,8 +356,31 @@ export class BattleScene extends Phaser.Scene {
     this.spinTimer = null;
 
     const state = useGameStore.getState();
-    const results: number[] = this.slotDice.map(dice => {
-      const val = Phaser.Math.Between(1, 6);
+    const { reelStatuses } = state;
+    const results: number[] = this.slotDice.map((dice, index) => {
+      const status = reelStatuses[index] || 'normal';
+      let val = Phaser.Math.Between(1, 6);
+
+      // Effect Logic
+      if (status === 'locked') {
+        val = 1;
+        state.addFloatingText({
+          value: 'LOCKED!',
+          x: dice.x,
+          y: dice.y - 60,
+          type: 'damage' as any
+        });
+      } else if (status === 'slippery') {
+        // Visual flair for slippery
+        state.addFloatingText({
+          value: 'SLIP!',
+          x: dice.x,
+          y: dice.y + 40,
+          type: 'info' as any
+        });
+        // Slippery logic is implicitly just RNG, but we add visual confirmation
+      }
+
       (dice as any).numberText.setText(val.toString());
       dice.setScale(1.2);
       this.tweens.add({
@@ -228,6 +404,11 @@ export class BattleScene extends Phaser.Scene {
 
       return val;
     });
+
+    // Reset statuses after result (Optional: or keep them for a duration? Plan says reset)
+    // Actually plan said resetReelStatuses exists. Let's call it after turn or here?
+    // Let's reset here so next turn is fresh.
+    state.resetReelStatuses();
 
     state.setDiceResults(results);
     soundManager.playSe('win');

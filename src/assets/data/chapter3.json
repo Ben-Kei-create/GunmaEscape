@@ -1,0 +1,96 @@
+{
+    "chapter": "3",
+    "title": "無限キャベツ地獄",
+    "scenarios": [
+        {
+            "id": "c3_01_cabbage_field",
+            "type": "story",
+            "title": "嬬恋村",
+            "description": "キャベツの海へ",
+            "text": "{{player}}はキャベツ畑の中を歩いていた。\\n\\n一時間。\\n二時間。\\n三時間。\\n\\nまだキャベツ。永遠にキャベツ。無限のキャベツ。\\n\\n「おかしい...同じ場所をループしてる気がする...」\\n\\nGPSは『圏外』と表示されている。コンパスは狂ったように回転している。これがグンマーの結界か。",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "next": "c3_02_wind_event"
+        },
+        {
+            "id": "c3_02_wind_event",
+            "type": "story",
+            "title": "赤城おろし",
+            "description": "殺人的な強風",
+            "text": "突然、猛烈な風が吹き荒れ始めた！\\n\\n「ぐあっ...！」\\n\\n{{player}}は思わず目を閉じる。これが「赤城おろし」か！上州名物の殺人的な季節風！\\n\\n体力がじわじわと削られていく...！どこかに避難しなければ...！\\n\\n［赤城おろし発動：HP-5］",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "hpChange": -5,
+            "next": "c3_03_tractor"
+        },
+        {
+            "id": "c3_03_tractor",
+            "type": "enemy",
+            "title": "暴走トラクター",
+            "description": "農業兵器",
+            "text": "強風の中、何かが近づいてくる！\\n\\n「なっ...！？」\\n\\n無人のトラクターが猛スピードで突っ込んでくる！！荷台には大量のキャベツ！その形相は完全に殺る気だ！\\n\\n「トラクターに意志があるのか!?」\\n\\nいや、よく見ると運転席に...カラス？カラスがハンドルを操作している！\\n\\nこれがグンマーの野生...！",
+            "image": "/assets/enemies/enemy_tractor.png",
+            "enemyId": "mad_tractor",
+            "triggerBattleId": "mad_tractor",
+            "next": "c3_04_after_tractor"
+        },
+        {
+            "id": "c3_04_after_tractor",
+            "type": "story",
+            "title": "トラクターを撃破",
+            "description": "農業との戦い",
+            "text": "トラクターを撃退し、{{player}}は荷台を調べた。\\n\\n新鮮なキャベツがいくつか転がっている。\\n\\n「...食料になるか」\\n\\n{{player}}は新鮮なキャベツを手に入れた！\\n\\n[新鮮キャベツを入手]",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "itemGet": "fresh_cabbage",
+            "next": "c3_05_mandrake"
+        },
+        {
+            "id": "c3_05_mandrake",
+            "type": "enemy",
+            "title": "マンドラゴラ",
+            "description": "叫ぶキャベツ",
+            "text": "さらに進んでいくと、不気味な音が聞こえてくる。\\n\\n「アアアアアアアア！！！」\\n\\n...叫び声だ。キャベツ畑の中から。\\n\\nよく見ると、一つのキャベツが奇妙に動いている。いや、あれはキャベツじゃない。顔がある。足が生えている。\\n\\n「マンドラゴラか...？」\\n\\nファンタジー生物がなぜ群馬に...！？いや、もう何も驚かない。{{player}}は武器を構えた。",
+            "image": "/assets/enemies/enemy_mandrake.png",
+            "enemyId": "mad_cabbage",
+            "triggerBattleId": "mad_cabbage",
+            "next": "c3_06_hot_spring_hint"
+        },
+        {
+            "id": "c3_06_hot_spring_hint",
+            "type": "story",
+            "title": "温泉の噂",
+            "description": "救いの場所",
+            "text": "マンドラゴラを倒すと、その死体（？）から奇妙な地図の切れ端が出てきた。\\n\\n「...『伝説の温泉』？」\\n\\n地図によると、このキャベツ畑のどこかに、疲れた{{player}}を癒やしてくれる温泉があるらしい。\\n\\nただし、その入り口はキャベツの王に守られているとも...\\n\\n「キャベツの...王...？」\\n\\n嫌な予感しかしない。",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "next": "c3_07_boss_approach"
+        },
+        {
+            "id": "c3_07_boss_approach",
+            "type": "story",
+            "title": "緑の王座",
+            "description": "ボスエリアへ",
+            "text": "地図を頼りに進むと、キャベツ畑の中央に異様な空間があった。\\n\\nキャベツの山が積み上げられ、その頂点に...何かがいる。\\n\\n巨大な...緑の塊。\\n\\n「アレガ...キャベツ・オーバーロード...」\\n\\n{{player}}は息を呑んだ。高さ3メートルはある。巨大なキャベツの集合体。その中央に開いた裂け目から、禍々しい光が漏れている。\\n\\n「ヨソモノヨ...ワタシノ王国ニヨク来タ...」\\n\\n...喋った。",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "next": "c3_boss"
+        },
+        {
+            "id": "c3_boss",
+            "type": "enemy",
+            "title": "決戦 キャベツ・オーバーロード",
+            "description": "野菜の覇王",
+            "text": "「ワタシハ嬬恋ノ王！全テノキャベツノ支配者！」\\n\\n巨大なキャベツが蠢き始める！地面が揺れ、周囲のキャベツが次々と集まってくる！\\n\\n「コノ地デ育ッタ者ナクシテハ、温泉ニハ入レヌ！」\\n\\n{{player}}は歯を食いしばった。\\n\\n「だったら...倒すしかないな！」\\n\\nファイナルバトル、開始！",
+            "image": "/assets/enemies/enemy_cabbage_boss.png",
+            "enemyId": "cabbage_overlord",
+            "triggerBattleId": "cabbage_overlord",
+            "next": "c3_ending"
+        },
+        {
+            "id": "c3_ending",
+            "type": "story",
+            "title": "第3章「無限キャベツ地獄」完",
+            "description": "温泉への道",
+            "text": "キャベツ・オーバーロードは崩れ落ちた。その体から、無数のキャベツがバラバラと転がり落ちていく。\\n\\n「見事ダ...ヨソモノヨ...」\\n\\n消えゆく声と共に、隠されていた洞窟への入り口が現れた。\\n\\n中からは湯気が立ち上っている。硫黄の匂い。\\n\\n「温泉...見つけた...！」\\n\\n{{player}}はよろめきながら洞窟へと足を踏み入れた。\\n\\nキャベツの盾を入手した！\\n\\n― 第3章「無限キャベツ地獄」完 ―\\n\\n...だが、グンマーからの脱出は、まだ遠い。",
+            "image": "/assets/backgrounds/bg_cabbage.png",
+            "itemGet": "cabbage_shield",
+            "next": null
+        }
+    ]
+}
