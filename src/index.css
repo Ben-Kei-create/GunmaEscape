@@ -7,13 +7,21 @@
   --sat: env(safe-area-inset-top);
   --sab: env(safe-area-inset-bottom);
 
-  /* Neo-Gunma Colors */
-  --gunma-bg: #000000;
-  --gunma-text: #e0e0e0;
-  --gunma-accent: #39ff14;
-  /* Neon Green */
+  /* Antigravity Design System Tokens */
+  --color-bg-base: #0D0F12;
+  --color-bg-surface: #1C1E24;
+  --color-text-high: #F5F5F0;
+  --color-text-medium: #B0B3B8;
+  --color-accent-primary: #36E46A;
+  --color-state-danger: #FF3B30;
+  --color-state-info: #36E46A;
+
+  /* Legacy Mappings to New System */
+  --gunma-bg: var(--color-bg-base);
+  --gunma-text: var(--color-text-high);
+  --gunma-accent: var(--color-accent-primary);
   --gunma-magenta: #ff00ff;
-  /* Toxic Magenta */
+  /* Keep for specific effects */
 
   --shadow-neon: 0 0 5px var(--gunma-accent), 0 0 10px var(--gunma-accent);
   --shadow-magenta: 0 0 5px var(--gunma-magenta), 0 0 10px var(--gunma-magenta);

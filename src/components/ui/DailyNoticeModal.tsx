@@ -21,29 +21,35 @@ const DailyNoticeModal = () => {
 
 以上、群馬県境対策本部`;
 
+    // Check Date Logic
     useEffect(() => {
-        // Check if we should show the notice
         const today = new Date().toDateString();
-
+        // Only run this check once on mount
         if (lastLoginDate !== today) {
-            // New day, show notice
             setIsOpen(true);
             setLastLoginDate(today);
-
-            // Typewriter effect
-            let index = 0;
-            const interval = setInterval(() => {
-                if (index < fullText.length) {
-                    setDisplayText(fullText.slice(0, index + 1));
-                    index++;
-                } else {
-                    clearInterval(interval);
-                }
-            }, 30);
-
-            return () => clearInterval(interval);
         }
-    }, [lastLoginDate, setLastLoginDate]);
+    }, []); // Check only on mount
+
+    // Animation Logic
+    useEffect(() => {
+        if (!isOpen) return;
+
+        // Reset text when opening
+        setDisplayText('');
+
+        let index = 0;
+        const interval = setInterval(() => {
+            if (index < fullText.length) {
+                setDisplayText(fullText.slice(0, index + 1));
+                index++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 30);
+
+        return () => clearInterval(interval);
+    }, [isOpen]); // Run when isOpen changes
 
     const handleClaim = () => {
         // Grant reward
@@ -92,10 +98,18 @@ const DailyNoticeModal = () => {
                         </div>
 
                         {/* Content with typewriter */}
-                        <div className="mb-6 min-h-[300px]">
-                            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900">
+                        <div
+                            className="mb-6 min-h-[300px] cursor-pointer active:opacity-80 transition-opacity"
+                            onClick={() => setDisplayText(fullText)}
+                        >
+                            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900 pointer-events-none">
                                 {displayText}
                             </pre>
+                            {displayText.length < fullText.length && (
+                                <div className="mt-2 text-center text-xs text-gray-400 animate-pulse">
+                                    (タップしてスキップ)
+                                </div>
+                            )}
                         </div>
 
                         {/* Claim Button */}
