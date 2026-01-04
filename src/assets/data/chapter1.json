@@ -44,7 +44,7 @@
       "title": "タムラ村",
       "description": "グンマー最後の集落",
       "text": "たどり着いた「タムラ村」は、こじんまりとした集落だった。村長のシュウオウは言った。「これを持っていけ。グンマーでの通貨は'キャベツ'だ。そしてこのダイスで敵と戦え」...正気か？",
-      "image": "/assets/backgrounds/bg_akagi_mist.png",
+      "image": "/assets/backgrounds/bg_village_tamura.png",
       "itemGet": "basic_dice",
       "next": "c1_06_bandit_rumor"
     },

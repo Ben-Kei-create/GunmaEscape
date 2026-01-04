@@ -84,6 +84,10 @@ class HapticsManager {
     await this.impact(ImpactStyle.Heavy);
   }
 
+  async notificationError(): Promise<void> {
+    await this.notification(NotificationType.Error);
+  }
+
   isSupported(): boolean {
     return this.isAvailable;
   }

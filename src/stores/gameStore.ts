@@ -55,10 +55,20 @@ interface GameStore extends GameState {
   // Slot Battle System
   playerDiceCount: number;
   upgradeDiceCount: () => void;
+  // Phase 41: Level System
+  playerLevel: number;
+  playerExp: number;
+  expToNextLevel: number;
+  addExp: (amount: number) => void;
   diceResults: number[];
   setDiceResults: (results: number[]) => void;
   slotState: 'idle' | 'spinning' | 'stopped';
   setSlotState: (state: 'idle' | 'spinning' | 'stopped') => void;
+  // Phase 42: Respect Roulette
+  isRouletteActive: boolean;
+  setRouletteActive: (active: boolean) => void;
+  rouletteResult: number | null;
+  setRouletteResult: (result: number) => void;
   // Phase 35: Battle Interference
   reelStatuses: ('normal' | 'slippery' | 'locked')[];
   setReelStatus: (index: number, status: 'normal' | 'slippery' | 'locked') => void;
@@ -95,6 +105,10 @@ interface GameStore extends GameState {
   // Phase 36: Daily Login
   lastLoginDate: string | null;
   setLastLoginDate: (date: string) => void;
+  // Phase 42: Infinite Item Cooldowns
+  itemCooldowns: Record<string, number>;
+  setItemCooldown: (itemId: string, turns: number) => void;
+  decrementItemCooldowns: () => void;
   // Phase 37: Swipe Tutorial
   hasSeenSwipeTutorial: boolean;
   setHasSeenSwipeTutorial: (seen: boolean) => void;
@@ -166,8 +180,36 @@ export const useGameStore = create<GameStore>()(
       diceRollResult: null,
       diceRollResult2: null,
       playerDiceCount: 1,
+      // Phase 41: Level System
+      playerLevel: 1,
+      playerExp: 0,
+      expToNextLevel: 100,
+      itemCooldowns: {},
+      addExp: (amount) => set((state) => {
+        let newExp = state.playerExp + amount;
+        let newLevel = state.playerLevel;
+        let newExpToNext = state.expToNextLevel;
+
+        // Level up logic
+        while (newExp >= newExpToNext) {
+          newExp -= newExpToNext;
+          newLevel++;
+          newExpToNext = Math.floor(100 * Math.pow(1.2, newLevel - 1)); // Each level requires 20% more exp
+          state.addLog(`> LEVEL UP! Lv.${newLevel}`, 'victory');
+        }
+
+        return {
+          playerExp: newExp,
+          playerLevel: newLevel,
+          expToNextLevel: newExpToNext
+        };
+      }),
       diceResults: [],
       slotState: 'idle',
+      isRouletteActive: false,
+      setRouletteActive: (active) => set({ isRouletteActive: active }),
+      rouletteResult: null,
+      setRouletteResult: (result) => set({ rouletteResult: result }),
       logs: [
         { message: '> G-OS v2.3.1 起動完了', type: 'info', timestamp: Date.now() },
         { message: '> グンマー県内の異常を検出...', type: 'info', timestamp: Date.now() },
@@ -228,6 +270,16 @@ export const useGameStore = create<GameStore>()(
       })),
       isScenarioMapOpen: false,
       setScenarioMapOpen: (isOpen) => set({ isScenarioMapOpen: isOpen }),
+      setItemCooldown: (itemId, turns) => set((state) => ({
+        itemCooldowns: { ...state.itemCooldowns, [itemId]: turns }
+      })),
+      decrementItemCooldowns: () => set((state) => {
+        const newCooldowns = { ...state.itemCooldowns };
+        Object.keys(newCooldowns).forEach(id => {
+          if (newCooldowns[id] > 0) newCooldowns[id]--;
+        });
+        return { itemCooldowns: newCooldowns };
+      }),
       isNameEntryOpen: false,
       setNameEntryOpen: (isOpen) => set({ isNameEntryOpen: isOpen }),
 

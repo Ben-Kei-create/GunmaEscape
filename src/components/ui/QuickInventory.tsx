@@ -5,7 +5,7 @@ import { Item } from '../../types';
 import { ITEM_CATALOG } from '../../data/items';
 
 const QuickInventory = () => {
-    const { equippedItems, setSelectedItemForModal, inventory, setInventoryOpen } = useGameStore();
+    const { equippedItems, setSelectedItemForModal, inventory, setInventoryOpen, itemCooldowns } = useGameStore();
 
     // Group items by ID
     const groupedItems = inventory.reduce((acc, id) => {
@@ -17,6 +17,11 @@ const QuickInventory = () => {
     const weapon = equippedItems.weapon;
 
     const handleItemClick = (item: Item) => {
+        // Check cooldown
+        if (itemCooldowns[item.id] > 0) {
+            soundManager.playSe('cancel');
+            return;
+        }
         soundManager.playSe('button_click');
         setSelectedItemForModal(item);
     };
@@ -50,7 +55,7 @@ const QuickInventory = () => {
             <div className="w-px h-8 bg-gunma-accent/30" />
 
             {/* Item Slots */}
-            <div className="flex gap-2 overflow-x-auto no-scrollbar py-1">
+            <div className="flex gap-2 overflow-x-auto no-scrollbar py-1 flex-1">
                 {uniqueItemIds.slice(0, 5).map((itemId) => {
                     const count = groupedItems[itemId];
                     const item = ITEM_CATALOG[itemId];
@@ -58,39 +63,50 @@ const QuickInventory = () => {
 
                     // Check if equipped in any slot
                     const isEquipped = Object.values(equippedItems).some(e => e?.id === item.id);
+                    const cooldown = itemCooldowns[item.id] || 0;
 
                     return (
                         <motion.button
                             key={itemId}
-                            whileTap={{ scale: 0.95 }}
+                            whileTap={cooldown > 0 ? {} : { scale: 0.95 }}
                             onClick={() => handleItemClick(item)}
                             className={`h-12 w-12 border rounded flex items-center justify-center relative overflow-hidden transition-colors shrink-0
-                                ${isEquipped
-                                    ? 'border-blue-400 bg-blue-900/20'
-                                    : 'border-gunma-accent/50 bg-black/40 hover:bg-gunma-accent/10 active:bg-gunma-accent/20'}`}
+                                ${isEquipped ? 'border-blue-400 bg-blue-900/20' : 'border-gunma-accent/50 bg-black/40'}
+                                ${cooldown > 0 ? 'opacity-50 grayscale' : 'hover:bg-gunma-accent/10 active:bg-gunma-accent/20'}`}
                         >
                             <div className="text-2xl">{item.icon}</div>
 
-                            {/* Quantity Badge */}
-                            {count > 1 && (
-                                <div className="absolute bottom-0 right-0 bg-black/80 text-white text-[10px] font-bold px-1 rounded-tl border-t border-l border-gunma-accent/50 leading-none shadow-md">
-                                    x{count}
+                            {/* Quantity / Infinite Badge */}
+                            <div className="absolute bottom-0 right-0 bg-black/80 text-white text-[10px] font-bold px-1 rounded-tl border-t border-l border-gunma-accent/50 leading-none shadow-md">
+                                {item.infinite ? '∞' : `x${count}`}
+                            </div>
+
+                            {/* Cooldown Overlay */}
+                            {cooldown > 0 && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/60 font-bold text-red-500 text-lg">
+                                    {cooldown}
                                 </div>
                             )}
                         </motion.button>
                     );
                 })}
-
-                {/* BAG Button */}
-                <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleOpenBag}
-                    className="h-12 w-12 border border-gunma-accent bg-gunma-accent/20 rounded flex items-center justify-center relative overflow-hidden shrink-0 hover:bg-gunma-accent/30"
-                >
-                    <div className="text-2xl">👜</div>
-                    <div className="absolute bottom-0 w-full text-[8px] text-center font-bold bg-black/50 text-gunma-accent">BOX</div>
-                </motion.button>
             </div>
+
+            {/* BAG Button */}
+            <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={handleOpenBag}
+                className="h-16 w-16 -mr-2 relative flex items-center justify-center"
+            >
+                <div className="absolute inset-0 bg-contain bg-center bg-no-repeat"
+                    style={{
+                        backgroundImage: 'url(/assets/ui/btn_inventory_highlight.png)',
+                        filter: 'drop-shadow(0 0 5px #ffaa00)'
+                    }}
+                />
+                {/* Fallback Label if image fails loading (hidden if image loads usually, but good for dev) */}
+                <div className="text-[10px] text-white font-bold mt-8 sr-only">BAG</div>
+            </motion.button>
         </div>
     );
 };

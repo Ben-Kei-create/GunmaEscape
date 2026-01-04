@@ -379,6 +379,15 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+
+
+  private stopSpinning() {
+    if (this.spinTimer) {
+      this.spinTimer.destroy();
+      this.spinTimer = null;
+    }
+  }
+
   public finalizeSlotResults() {
     if (!this.spinTimer) return;
 
@@ -439,26 +448,37 @@ export class BattleScene extends Phaser.Scene {
     // Actually plan said resetReelStatuses exists. Let's call it after turn or here?
     // Let's reset here so next turn is fresh.
     state.resetReelStatuses();
-
     state.setDiceResults(results);
     soundManager.playSe('win');
     hapticsManager.heavyImpact(); // Enhanced "juice" on stop
 
-    // Process damage after a short delay so player can see the dice
-    this.time.delayedCall(800, () => {
-      this.processPlayerAttack(results);
-      state.setSlotState('idle');
+    // Phase 42: Trigger Respect Roulette
+    state.setRouletteActive(true);
+    // Reset result just in case
+    // (Wait, store action sets logic should probably clear it, but let's assume component or store handled it. 
+    // Actually store.setRouletteResult(null) might be needed if not auto-cleared. 
+    // I'll assume current store setup or component mount clears it. 
+    // Wait, component useEffect sets currentNumber=1. Store result persists? 
+    // Let's explicitly clear it here if needed, or rely on component to set it only when stopped.
+    // Ideally we clear it first.)
+    state.setRouletteResult(null as any);
+
+    // Wait for roulette result
+    const checkRoulette = this.time.addEvent({
+      delay: 100,
+      loop: true,
+      callback: () => {
+        const { rouletteResult } = useGameStore.getState();
+        if (rouletteResult !== null) {
+          checkRoulette.destroy();
+          this.processPlayerAttack(results, rouletteResult);
+          state.setSlotState('idle');
+        }
+      }
     });
   }
 
-  private stopSpinning() {
-    if (this.spinTimer) {
-      this.spinTimer.destroy();
-      this.spinTimer = null;
-    }
-  }
-
-  private processPlayerAttack(results: number[]) {
+  private processPlayerAttack(results: number[], rouletteVal: number = 0) {
     const state = useGameStore.getState();
     const targetSymbol = state.targetSymbol;
 
@@ -468,6 +488,27 @@ export class BattleScene extends Phaser.Scene {
 
     // Calculate base damage
     let damage = this.battleSystem.processPlayerAttack(results);
+
+    // Phase 42: Apply Respect Roulette Multiplier
+    let rouletteMultiplier = 1.0;
+    let rouletteMsg = '';
+
+    if (rouletteVal === 6) {
+      rouletteMultiplier = 2.0;
+      rouletteMsg = 'TRUE RESPECT! (x2)';
+      this.cameras.main.shake(300, 0.02);
+      this.createLightningEffect(); // Extra flair
+    } else if (rouletteVal === 1) {
+      rouletteMultiplier = 0.1;
+      rouletteMsg = 'BAD TIMING... (x0.1)';
+    }
+
+    // Apply multiplier
+    damage = Math.floor(damage * rouletteMultiplier);
+
+    if (rouletteVal !== 0) {
+      state.addLog(`> ${rouletteMsg}`, rouletteVal === 6 ? 'critical' : 'damage');
+    }
 
     // Apply 2x bonus for target match
     if (hasSniperBonus) {

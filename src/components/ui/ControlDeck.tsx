@@ -3,6 +3,7 @@ import { useGameStore } from '../../stores/gameStore';
 import { soundManager } from '../../systems/SoundManager';
 import { hapticsManager } from '../../systems/HapticsManager';
 import SwipeCard from './SwipeCard';
+import QuickInventory from './QuickInventory';
 
 export default function ControlDeck() {
   // 1. Hook Declarations (ALWAYS at the top, UNCONDITIONAL)
@@ -113,6 +114,11 @@ export default function ControlDeck() {
             <div className="text-3xl mb-1 filter drop-shadow-[0_0_2px_rgba(255,255,255,0.5)]">🏃</div>
             <div className="text-[10px] font-bold tracking-widest">にげる</div>
           </button>
+        </div>
+
+        {/* Phase 42: Quick Inventory (Shortcuts) */}
+        <div className="w-full mt-2 pointer-events-auto">
+          <QuickInventory />
         </div>
       </div>
     );

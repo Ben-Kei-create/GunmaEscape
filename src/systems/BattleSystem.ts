@@ -254,6 +254,9 @@ export class BattleSystem {
     // Phase 35: Enemy Interference
     this.processEnemySkills();
 
+    // Phase 42: Decrement item cooldowns at start of player turn
+    this.gameStore.getState().decrementItemCooldowns();
+
     // Update battle state
     this.gameStore.setState({
       battleState: {
@@ -362,6 +365,20 @@ export class BattleSystem {
       // Phase 36: Track enemy defeats
       this.gameStore.getState().incrementStat('enemiesDefeated');
       achievementManager.onStatChange();
+
+      // Phase 41: Grant exp and trigger result banner
+      const expGained = Math.floor(30 + (battleState?.enemy?.hp || 0) * 0.5);
+      const prevLevel = this.gameStore.getState().playerLevel;
+      this.gameStore.getState().addExp(expGained);
+      const newLevel = this.gameStore.getState().playerLevel;
+
+      window.dispatchEvent(new CustomEvent('battleResult', {
+        detail: {
+          expGained,
+          itemsGained: [],
+          levelUp: newLevel > prevLevel ? { from: prevLevel, to: newLevel } : undefined
+        }
+      }));
     } else if (result === 'defeat') {
       // Set game over info
       const cause = battleState?.enemy?.name || '不明な敵';

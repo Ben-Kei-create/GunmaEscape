@@ -64,7 +64,7 @@ export interface LegacyCard {
 }
 
 export interface GameState {
-  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection' | 'victory';
+  currentMode: 'exploration' | 'battle' | 'menu' | 'gameover' | 'collection' | 'victory' | 'village';
   currentCard?: CardEvent;
   battleResult?: {
     damage: number;
@@ -82,5 +82,7 @@ export interface Item {
   description: string;
   effectType?: 'attack_boost' | 'defense_boost' | 'critical_rate';
   slot?: 'weapon' | 'armor' | 'accessory';
+  infinite?: boolean; // If true, item is not consumed on use
+  cooldown?: number; // Number of turns to wait before using again
 }
 

@@ -27,7 +27,9 @@ export const ITEM_CATALOG: Record<string, Item> = {
         icon: '🍡',
         type: 'heal',
         value: 20,
-        description: '群馬県民のソウルフード。甘じょっぱい味噌ダレが体力を回復させる。'
+        description: '群馬名物。味噌ダレが香ばしい。',
+        infinite: true,
+        cooldown: 3
     },
     'konjac': {
         id: 'konjac',
@@ -62,6 +64,16 @@ export const ITEM_CATALOG: Record<string, Item> = {
         value: 15,
         description: 'キャベツ・オーバーロードの葉で作られた盾。意外と硬い。',
         effectType: 'defense_boost'
+    },
+    'basic_dice': {
+        id: 'basic_dice',
+        name: '旅人のダイス',
+        icon: '🎲',
+        type: 'equip',
+        slot: 'weapon',
+        value: 5,
+        description: '村長からもらった基本的なダイス。運命を切り開け。',
+        effectType: 'attack_boost'
     }
 };
 

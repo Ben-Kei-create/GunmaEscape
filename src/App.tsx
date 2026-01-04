@@ -14,7 +14,7 @@ import VictoryScreen from './components/ui/VictoryScreen';
 import TutorialOverlay from './components/ui/TutorialOverlay';
 import RippleContainer from './components/ui/RippleContainer';
 import GunmaTicker from './components/ui/GunmaTicker';
-import QuickInventory from './components/ui/QuickInventory';
+
 import InventoryManager from './components/ui/InventoryManager';
 import CRTOverlay from './components/ui/CRTOverlay';
 import ProgressBar from './components/ui/ProgressBar';
@@ -27,6 +27,9 @@ import ProfileScreen from './components/ui/ProfileScreen';
 import ReelTuningScreen from './components/ui/ReelTuningScreen';
 import MemeMaker from './components/ui/MemeMaker';
 import TypewriterLog from './components/ui/TypewriterLog';
+import BattleResultBanner from './components/ui/BattleResultBanner';
+import RespectRoulette from './components/battle/RespectRoulette';
+import VillageScreen from './components/ui/VillageScreen';
 import { useGameStore } from './stores/gameStore';
 import { usePlayerStore } from './stores/playerStore';
 import { soundManager } from './systems/SoundManager';
@@ -50,6 +53,12 @@ function App() {
     const item = selectedItemForModal;
     if (!item) return;
 
+    // Check cooldown
+    if (useGameStore.getState().itemCooldowns[item.id] > 0) {
+      soundManager.playSe('cancel');
+      return;
+    }
+
     if (item.type === 'heal') {
       heal(item.value);
       soundManager.playSe('heal');
@@ -66,6 +75,15 @@ function App() {
       if (item.id === 'konnyaku') {
         incrementStat('konnyakuEaten');
         achievementManager.onStatChange();
+      }
+
+      // Consumption Logic
+      if (item.infinite) {
+        if (item.cooldown) {
+          useGameStore.getState().setItemCooldown(item.id, item.cooldown);
+        }
+      } else {
+        usePlayerStore.getState().removeItem(item.id);
       }
     } else if (item.type === 'equip') {
       const equippedSlot = (Object.keys(equippedItems) as ('weapon' | 'armor' | 'accessory')[]).find(
@@ -215,7 +233,7 @@ function App() {
                 <div className="w-full h-14 bg-black/60 rounded border-2 border-gunma-accent/20 p-1 shadow-[inset_0_0_10px_rgba(0,0,0,0.8)] relative overflow-hidden">
                   {/* Slot Effect */}
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-b from-black to-transparent opacity-50" />
-                  <QuickInventory />
+
                 </div>
               </div>
 
@@ -249,6 +267,12 @@ function App() {
         {!isTitleVisible && currentMode === 'gameover' && <GameOverScreen />}
         {!isTitleVisible && currentMode === 'collection' && <CollectionBook />}
         {!isTitleVisible && currentMode === 'victory' && <VictoryScreen />}
+        {!isTitleVisible && currentMode === 'village' && (
+          <VillageScreen
+            isOpen={true}
+            onClose={() => useGameStore.getState().setMode('exploration')}
+          />
+        )}
 
         {/* Tutorial Overlay */}
         {!isTitleVisible && (
@@ -272,6 +296,14 @@ function App() {
         {/* Phase 38: Reel Tuning & Meme Maker */}
         <ReelTuningScreen isOpen={isReelTuningOpen} onClose={() => setIsReelTuningOpen(false)} />
         <MemeMaker isOpen={isMemeMakerOpen} onClose={() => setIsMemeMakerOpen(false)} />
+
+        {/* Phase 41: Battle Result Banner & Village */}
+        <BattleResultBanner />
+
+        {/* Phase 42: Respect Roulette */}
+        <RespectRoulette />
+
+        {/* Item Detail Modal */}
 
         {/* Item Detail Modal */}
         <ItemDetailModal
