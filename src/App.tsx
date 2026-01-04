@@ -18,7 +18,6 @@ import GunmaTicker from './components/ui/GunmaTicker';
 import InventoryManager from './components/ui/InventoryManager';
 import SwipeCard from './components/ui/SwipeCard';
 import SwiftUIFooter from './components/ui/SwiftUIFooter';
-import CRTOverlay from './components/ui/CRTOverlay';
 import ProgressBar from './components/ui/ProgressBar';
 import TurnIndicator from './components/ui/TurnIndicator';
 import ItemDetailModal from './components/ui/ItemDetailModal';
@@ -147,14 +146,17 @@ function App() {
 
   return (
     <>
-      <div className="relative w-full h-screen overflow-hidden bg-gunma-bg font-dotgothic">
-        {/* CRT Overlay & Fog */}
-        <CRTOverlay />
-        <div className="absolute inset-0 pointer-events-none z-0 opacity-20 mix-blend-screen" style={{
-          backgroundImage: 'url(/assets/backgrounds/fog.png)',
-          backgroundSize: '200% 100%',
-          animation: 'fog-slide 60s linear infinite'
-        }} />
+      <div
+        className="relative w-full h-screen overflow-hidden font-sans"
+        style={{ background: 'var(--color-bg-base)' }}
+      >
+        {/* Subtle ambient gradient (Apple-style) */}
+        <div
+          className="absolute inset-0 pointer-events-none z-0 opacity-30"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(48, 209, 88, 0.15) 0%, transparent 60%)'
+          }}
+        />
 
         {isTitleVisible ? (
           // タイトル画面
@@ -173,8 +175,7 @@ function App() {
                 filter: criticalFlash ? 'invert(1) brightness(1.5)' : 'none',
               }}
             >
-              {/* Matrix Background */}
-              <div className="absolute inset-0 matrix-bg pointer-events-none z-0" />
+              {/* Clean Background - No matrix effect */}
 
               {/* Settings Button (Overlay) */}
               {/* Settings Button (Overlay) - Only show after tutorial */}
@@ -182,9 +183,12 @@ function App() {
                 <button
                   onClick={handleSettingsClick}
                   className="absolute top-[calc(env(safe-area-inset-top)+40px)] right-3 z-50 w-10 h-10 flex items-center justify-center
-                             bg-black/50 border border-gunma-accent/50 rounded-full
-                             text-gunma-accent hover:bg-gunma-accent/20 hover:border-gunma-accent
-                             active:scale-90 transition-all duration-150 shadow-neon"
+                             rounded-full active:scale-90 transition-all duration-150"
+                  style={{
+                    background: 'var(--color-bg-elevated)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'var(--color-text-medium)'
+                  }}
                 >
                   ⚙️
                 </button>
@@ -211,9 +215,9 @@ function App() {
                   Visible only in Battle Mode
                   ===================================================================================== */}
               <div className={`w-full h-full flex flex-col ${currentMode === 'battle' ? 'block' : 'hidden'}`}>
-                {/* 1. VISUAL AREA (40vh) */}
-                <div className="relative w-full shrink-0 z-10" style={{ height: '40vh' }}>
-                  <div className="w-full h-full relative corner-cut overflow-hidden border-b-2 border-gunma-accent/50 shadow-[0_0_15px_rgba(57,255,20,0.2)]">
+                {/* 1. VISUAL AREA (45vh) */}
+                <div className="relative w-full shrink-0 z-10" style={{ height: '45vh' }}>
+                  <div className="w-full h-full relative overflow-hidden border-b border-gunma-accent/30">
                     {/* Battle View (Phaser) - Always mounted to preserve context */}
                     <div className="w-full h-full absolute inset-0 bg-black">
                       <GameCanvas />
@@ -227,10 +231,16 @@ function App() {
                 </div>
 
                 {/* Separator */}
-                <div className="neon-separator" />
+                <div className="h-px" style={{ background: 'rgba(48, 209, 88, 0.3)' }} />
 
-                {/* 2. TACTICS AREA (25vh) */}
-                <div className="relative w-full shrink-0 z-20 bg-black/40 backdrop-blur-sm flex flex-col justify-end pb-2 px-2 gap-2" style={{ height: '25vh' }}>
+                {/* 2. TACTICS AREA - Compact HP and Log */}
+                <div
+                  className="relative w-full shrink-0 z-20 flex flex-col justify-end pb-2 px-3 gap-1"
+                  style={{
+                    height: '20vh',
+                    background: 'linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0.9))'
+                  }}
+                >
                   <TypewriterLog />
                   <div className="w-full relative z-20">
                     <HealthBar />
@@ -240,13 +250,13 @@ function App() {
                 {/* 3. COCKPIT AREA (Remaining) */}
                 <div className="relative flex-1 min-h-0 w-full z-30 overflow-hidden">
                   {/* Log History Background */}
-                  <div className="absolute inset-0 z-0 opacity-30 pointer-events-auto p-2 overflow-hidden bg-black/80">
-                    <div className="w-full h-full mask-image-b-fade">
+                  <div className="absolute inset-0 z-0 opacity-20 pointer-events-auto p-2 overflow-hidden bg-black/90">
+                    <div className="w-full h-full">
                       <LogArea />
                     </div>
                   </div>
                   {/* Control Deck */}
-                  <div className="relative z-10 w-full h-full p-2 pb-[calc(env(safe-area-inset-bottom)+16px)] bg-gradient-to-t from-black via-black/80 to-transparent flex flex-col justify-end">
+                  <div className="relative z-10 w-full h-full p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] bg-gradient-to-t from-black via-black/90 to-transparent flex flex-col justify-end">
                     <ControlDeck />
                   </div>
                 </div>
@@ -258,14 +268,14 @@ function App() {
                   ===================================================================================== */}
               <div className={`w-full h-full flex flex-col relative ${currentMode === 'exploration' ? 'block' : 'hidden'}`}>
                 {/* Header (Status Bar + Settings) */}
-                <div className="absolute top-0 left-0 right-0 z-40 pt-[calc(env(safe-area-inset-top)+10px)] px-4">
+                <div className="absolute top-0 left-0 right-0 z-40 px-4">
                   {/* Reuse HealthBar for Status (HP/Lv) */}
                   <HealthBar />
                 </div>
 
                 {/* Main Content (SwipeCard - Full Screen) */}
                 {/* Give top/bottom padding to avoid Header/Footer overlap coverage */}
-                <div className="w-full h-full relative z-10 pt-[80px] pb-[80px]">
+                <div className="w-full h-full relative z-10 pt-[70px] pb-[90px] px-4">
                   <SwipeCard />
                 </div>
 

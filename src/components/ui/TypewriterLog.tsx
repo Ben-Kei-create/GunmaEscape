@@ -1,114 +1,147 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore, type LogEntry } from '../../stores/gameStore';
 
-const getLogStyle = (type: LogEntry['type']) => {
+/**
+ * Apple-Style Typewriter Log Display
+ * Clean, minimal battle log with fade effect
+ */
+
+const getLogColor = (type: LogEntry['type']) => {
     switch (type) {
         case 'damage':
-            return 'text-red-400';
+            return 'var(--color-accent-red)';
         case 'heal':
-            return 'text-green-400';
+            return 'var(--color-accent-primary)';
         case 'critical':
-            return 'text-gunma-accent font-bold';
+            return 'var(--color-accent-yellow)';
         case 'victory':
-            return 'text-yellow-400 font-bold';
+            return 'var(--color-accent-yellow)';
         case 'defeat':
-            return 'text-red-500 font-bold';
+            return 'var(--color-accent-red)';
         case 'battle':
-            return 'text-orange-400';
+            return 'var(--color-accent-orange)';
         case 'error':
-            return 'text-red-500';
-        case 'story':
-            return 'text-blue-300';
+            return 'var(--color-accent-red)';
+        case 'info':
+            return 'var(--color-accent-blue)';
         default:
-            return 'text-gunma-accent';
+            return 'var(--color-text-medium)';
     }
 };
 
 const TypewriterLog = () => {
-    const { logs } = useGameStore();
-    const containerRef = useRef<HTMLDivElement>(null);
-    const [displayedText, setDisplayedText] = useState('');
+    const { logs, currentMode } = useGameStore();
+    const [displayText, setDisplayText] = useState('');
     const [currentLogIndex, setCurrentLogIndex] = useState(-1);
     const [isTyping, setIsTyping] = useState(false);
+    const [isSkipped, setIsSkipped] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
-    // Get the latest log
-    const latestLog = logs.length > 0 ? logs[logs.length - 1] : null;
-    const olderLogs = logs.slice(-7, -1); // Show up to 6 older logs
+    // Get latest 3 logs
+    const recentLogs = logs.slice(-3);
 
-    // Detect new log and start typewriter
+    // Typewriter effect for the latest log
     useEffect(() => {
-        if (logs.length > 0 && logs.length - 1 !== currentLogIndex) {
-            setCurrentLogIndex(logs.length - 1);
-            setDisplayedText('');
+        if (logs.length === 0) return;
+
+        const latestIndex = logs.length - 1;
+        if (latestIndex !== currentLogIndex) {
+            setCurrentLogIndex(latestIndex);
             setIsTyping(true);
+            setIsSkipped(false);
+            setDisplayText('');
+
+            const message = logs[latestIndex].message;
+            let charIndex = 0;
+
+            const typeInterval = setInterval(() => {
+                if (charIndex < message.length) {
+                    setDisplayText(message.substring(0, charIndex + 1));
+                    charIndex++;
+                } else {
+                    setIsTyping(false);
+                    clearInterval(typeInterval);
+                }
+            }, 30);
+
+            return () => clearInterval(typeInterval);
         }
-    }, [logs.length, currentLogIndex]);
+    }, [logs, currentLogIndex]);
 
-    // Typewriter effect
-    useEffect(() => {
-        if (!isTyping || !latestLog) return;
-
-        const fullText = latestLog.message;
-        let charIndex = 0;
-
-        const interval = setInterval(() => {
-            if (charIndex < fullText.length) {
-                setDisplayedText(fullText.slice(0, charIndex + 1));
-                charIndex++;
-            } else {
-                setIsTyping(false);
-                clearInterval(interval);
-            }
-        }, 25); // 25ms per character
-
-        return () => clearInterval(interval);
-    }, [isTyping, latestLog]);
-
-    // Auto-scroll to bottom
-    useEffect(() => {
-        if (containerRef.current) {
-            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    // Skip typewriter on tap
+    const handleTap = () => {
+        if (isTyping && logs.length > 0) {
+            setIsSkipped(true);
+            setIsTyping(false);
+            setDisplayText(logs[logs.length - 1].message);
         }
-    }, [logs.length, displayedText]);
+    };
+
+    if (currentMode !== 'battle' || logs.length === 0) {
+        return null;
+    }
+
+    const latestLog = logs[logs.length - 1];
+    const olderLogs = recentLogs.slice(0, -1);
 
     return (
         <div
             ref={containerRef}
-            className="w-full h-32 overflow-y-auto bg-black/80 border-l-2 border-gunma-accent/50 px-2 py-1 log-scrollbar rounded"
-            style={{ scrollBehavior: 'smooth' }}
+            className="w-full px-4 py-3 relative"
+            onClick={handleTap}
         >
-            {/* ▼ 修正箇所：フォントサイズと折り返し設定を変更しました
-               text-[10px]: フォントサイズを10pxに強制
-               leading-tight: 行間を詰める
-               break-all: 長い単語を強制的に改行してUI崩れを防ぐ
-            */}
-            <div className="space-y-0.5 font-mono text-[10px] leading-tight break-all">
-                {/* Older logs (displayed instantly) */}
-                {olderLogs.map((log, index) => (
-                    <div
-                        key={index}
-                        className={`${getLogStyle(log.type)} opacity-60`}
+            {/* Older Logs (faded) */}
+            <AnimatePresence>
+                {olderLogs.map((log, idx) => (
+                    <motion.div
+                        key={`old-${logs.length - 3 + idx}`}
+                        className="text-xs mb-0.5 font-medium"
+                        style={{
+                            color: getLogColor(log.type),
+                            opacity: 0.4
+                        }}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 0.4, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
                     >
                         {log.message}
-                    </div>
+                    </motion.div>
                 ))}
+            </AnimatePresence>
 
-                {/* Latest log (typewriter effect) */}
-                {latestLog && (
-                    <div className={`${getLogStyle(latestLog.type)} relative`}>
-                        {displayedText}
-                        {/* Blinking cursor during typing */}
-                        {isTyping && (
-                            <span className="animate-pulse ml-0.5 text-gunma-accent">▌</span>
-                        )}
-                    </div>
-                )}
+            {/* Latest Log (full opacity, typewriter) */}
+            <motion.div
+                className="text-sm font-medium"
+                style={{ color: getLogColor(latestLog.type) }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+            >
+                {isTyping && !isSkipped ? displayText : latestLog.message}
 
-                {/* Empty state */}
-                {logs.length === 0 && (
-                    <div className="text-gray-500">&gt; SYSTEM READY</div>
+                {/* Blinking cursor while typing */}
+                {isTyping && !isSkipped && (
+                    <motion.span
+                        className="inline-block w-0.5 h-4 ml-0.5 align-middle"
+                        style={{ background: getLogColor(latestLog.type) }}
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                    />
                 )}
-            </div>
+            </motion.div>
+
+            {/* Tap to skip indicator */}
+            {isTyping && (
+                <motion.div
+                    className="text-[10px] mt-2 text-right"
+                    style={{ color: 'var(--color-text-low)' }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                    タップでスキップ ▼
+                </motion.div>
+            )}
         </div>
     );
 };

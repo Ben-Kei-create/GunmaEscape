@@ -11,23 +11,41 @@ interface SwipeCardProps {
   isTop: boolean;
 }
 
+/**
+ * Get card accent color based on type
+ */
+const getCardAccent = (type: string) => {
+  switch (type) {
+    case 'battle':
+      return 'var(--color-accent-red)';
+    case 'story':
+      return 'var(--color-accent-blue)';
+    case 'treasure':
+    case 'reward':
+      return 'var(--color-accent-yellow)';
+    case 'event':
+      return 'var(--color-accent-orange)';
+    default:
+      return 'var(--color-accent-primary)';
+  }
+};
+
 const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
   const x = useMotionValue(0);
-  const rotate = useTransform(x, [-200, 200], [-20, 20]);
-  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0, 1, 1, 1, 0]);
+  const rotate = useTransform(x, [-200, 200], [-12, 12]);
+  const opacity = useTransform(x, [-200, -100, 0, 100, 200], [0.5, 1, 1, 1, 0.5]);
 
-  const acceptOpacity = useTransform(x, [0, 100], [0, 1]);
-  const rejectOpacity = useTransform(x, [-100, 0], [1, 0]);
+  const acceptOpacity = useTransform(x, [0, 80], [0, 1]);
+  const rejectOpacity = useTransform(x, [-80, 0], [1, 0]);
 
   const { hasSeenSwipeTutorial, setHasSeenSwipeTutorial } = useGameStore();
   const [isDragging, setIsDragging] = useState(false);
 
-  // Determine if this is a story card (tap-to-advance) or action card (swipe-to-choose)
   const isStory = card.type === 'story';
+  const accentColor = getCardAccent(card.type);
 
   const handleDragStart = () => {
     setIsDragging(true);
-    // Mark swipe tutorial as seen on first drag
     if (!hasSeenSwipeTutorial && !isStory) {
       setHasSeenSwipeTutorial(true);
     }
@@ -45,39 +63,41 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
 
   const handleClick = () => {
     if (isStory) {
-      // Story cards: tap to advance (always progress forward)
       import('../../systems/SoundManager').then(({ soundManager }) => {
         soundManager.playSe('button_click');
       });
       import('../../systems/HapticsManager').then(({ hapticsManager }) => {
         hapticsManager.lightImpact();
       });
-      onSwipe('right', card); // Always advance story
+      onSwipe('right', card);
     }
-    // Non-story cards: do nothing on click (require swipe)
   };
 
-  // Get choice labels from card data or use defaults
-  const leftLabel = (card as any).choices?.left?.text || '← 逃げる';
-  const rightLabel = (card as any).choices?.right?.text || '戦う →';
+  const leftLabel = (card as any).choices?.left?.text || '← スキップ';
+  const rightLabel = (card as any).choices?.right?.text || '進む →';
 
+  // Stack cards (not top)
   if (!isTop) {
     return (
       <motion.div
         className="absolute inset-0 w-full h-full"
         style={{
-          scale: 1 - (index * 0.05),
-          y: index * 8,
+          scale: 1 - (index * 0.04),
+          y: index * 6,
           zIndex: 10 - index,
         }}
-        initial={{ scale: 1 - (index * 0.05) }}
+        initial={{ scale: 1 - (index * 0.04) }}
       >
-        <div className="w-full h-full bg-gunma-konnyaku border-2 border-gunma-accent/30 rounded-xl glass p-6 flex flex-col">
-          <div className="text-gunma-accent text-xs mb-2 opacity-60">
+        <div
+          className="w-full h-full rounded-3xl p-6 flex flex-col overflow-hidden"
+          style={{
+            background: 'var(--color-bg-elevated)',
+            border: '1px solid rgba(255, 255, 255, 0.05)'
+          }}
+        >
+          <div className="opacity-40 text-xs text-white/60">
             [{card.type.toUpperCase()}]
           </div>
-          <h3 className="text-gunma-text text-lg font-bold mb-2">{card.title}</h3>
-          <p className="text-gunma-text text-sm opacity-80 flex-1">{card.description}</p>
         </div>
       </motion.div>
     );
@@ -94,82 +114,156 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
       }}
       drag={isStory ? false : "x"}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.2}
+      dragElastic={0.15}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onClick={handleClick}
-      initial={{ scale: 1 }}
-      whileDrag={isStory ? {} : { scale: 1.05 }}
+      initial={{ scale: 0.95, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      whileDrag={{ scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
     >
-      <div className="w-full h-full bg-gunma-konnyaku border-2 border-gunma-accent/50 rounded-xl glass p-6 flex flex-col shadow-2xl">
-        <div className="text-gunma-accent text-xs mb-1 font-bold tracking-wider">
-          [{card.type.toUpperCase()}]
-        </div>
-        <h3 className="text-gunma-text text-base font-bold mb-2 leading-tight">{card.title}</h3>
-        <p className="text-gunma-text text-xs leading-relaxed opacity-90 flex-1 mb-2 whitespace-pre-wrap overflow-y-auto scrollbar-thin">
-          {card.text || card.description}
-        </p>
+      {/* Main Card - Glassmorphism Design */}
+      <div
+        className="w-full h-full rounded-2xl overflow-hidden flex flex-col relative"
+        style={{
+          background: 'rgba(28, 28, 30, 0.85)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px rgba(48, 209, 88, 0.3)',
+          border: '1px solid rgba(48, 209, 88, 0.25)'
+        }}
+      >
+        {/* Left Accent Border */}
+        <div
+          className="absolute left-0 top-4 bottom-4 w-1 rounded-full"
+          style={{ background: accentColor }}
+        />
 
-        {/* Visual Cues: Different for Story vs Action */}
-        {isStory ? (
-          // Story Card: Tap indicator
-          <div className="flex items-center justify-center gap-2 text-sm text-gunma-accent opacity-80 font-bold">
-            <motion.span
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              ▼ タップして続ける
-            </motion.span>
+        {/* Card Content */}
+        <div className="flex-1 p-6 pl-8 flex flex-col">
+          {/* Type Badge */}
+          <div
+            className="inline-flex items-center self-start px-3 py-1 rounded-full mb-4"
+            style={{
+              background: `${accentColor}20`,
+              color: accentColor,
+            }}
+          >
+            <span className="text-[10px] font-bold tracking-widest uppercase">
+              {card.type}
+            </span>
           </div>
-        ) : (
-          // Action Card: Swipe indicators with dynamic labels
-          <div className="flex gap-2 text-sm text-gunma-text opacity-80 font-bold">
-            <span className="text-red-400">{leftLabel}</span>
-            <span className="ml-auto text-green-400">{rightLabel}</span>
+
+          {/* Title */}
+          <h3
+            className="text-base font-bold mb-2 leading-tight"
+            style={{ color: 'var(--color-accent-primary)' }}
+          >
+            {card.title}
+          </h3>
+
+          {/* Description */}
+          <p
+            className="text-xs leading-relaxed flex-1 whitespace-pre-wrap overflow-y-auto pr-2"
+            style={{
+              color: 'var(--color-text-medium)',
+              scrollbarWidth: 'thin'
+            }}
+          >
+            {card.text || card.description}
+          </p>
+
+          {/* Action Hints */}
+          <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(48, 209, 88, 0.15)' }}>
+            {isStory ? (
+              <motion.div
+                className="flex items-center justify-center gap-2 text-xs"
+                style={{ color: 'var(--color-accent-primary)' }}
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <span>▼</span>
+                <span>タップして続ける</span>
+              </motion.div>
+            ) : (
+              <div className="flex justify-between text-xs font-medium">
+                <span style={{ color: 'var(--color-accent-red)' }}>{leftLabel}</span>
+                <span style={{ color: 'var(--color-accent-primary)' }}>{rightLabel}</span>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Accept Overlay with dynamic label */}
+      {/* Accept Overlay */}
       {!isStory && (
         <motion.div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: acceptOpacity }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-3xl"
+          style={{
+            opacity: acceptOpacity,
+            background: 'rgba(48, 209, 88, 0.15)'
+          }}
         >
-          <div className="bg-green-500/20 border-4 border-green-500 rounded-xl px-8 py-4">
-            <span className="text-green-500 text-2xl font-bold">{rightLabel.replace('→', '').trim() || 'YES'}</span>
+          <div
+            className="px-8 py-4 rounded-2xl"
+            style={{
+              background: 'rgba(48, 209, 88, 0.2)',
+              border: '2px solid var(--color-accent-primary)'
+            }}
+          >
+            <span
+              className="text-2xl font-bold"
+              style={{ color: 'var(--color-accent-primary)' }}
+            >
+              {rightLabel.replace('→', '').trim() || 'YES'}
+            </span>
           </div>
         </motion.div>
       )}
 
-      {/* Reject Overlay with dynamic label */}
+      {/* Reject Overlay */}
       {!isStory && (
         <motion.div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ opacity: rejectOpacity }}
+          className="absolute inset-0 flex items-center justify-center pointer-events-none rounded-3xl"
+          style={{
+            opacity: rejectOpacity,
+            background: 'rgba(255, 69, 58, 0.15)'
+          }}
         >
-          <div className="bg-red-500/20 border-4 border-red-500 rounded-xl px-8 py-4">
-            <span className="text-red-500 text-2xl font-bold">{leftLabel.replace('←', '').trim() || 'NO'}</span>
+          <div
+            className="px-8 py-4 rounded-2xl"
+            style={{
+              background: 'rgba(255, 69, 58, 0.2)',
+              border: '2px solid var(--color-accent-red)'
+            }}
+          >
+            <span
+              className="text-2xl font-bold"
+              style={{ color: 'var(--color-accent-red)' }}
+            >
+              {leftLabel.replace('←', '').trim() || 'NO'}
+            </span>
           </div>
         </motion.div>
       )}
 
-      {/* Swipe Tutorial Hand Animation */}
+      {/* Swipe Tutorial */}
       {!isStory && !hasSeenSwipeTutorial && !isDragging && (
         <motion.div
           className="absolute inset-0 flex items-center justify-center pointer-events-none z-50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.8 }}
         >
           <motion.div
-            className="text-6xl"
+            className="text-5xl"
             animate={{
-              x: [-30, 30, -30],
-              opacity: [0.5, 1, 0.5],
+              x: [-20, 20, -20],
+              opacity: [0.4, 1, 0.4],
             }}
             transition={{
-              duration: 2,
+              duration: 2.5,
               repeat: Infinity,
               ease: 'easeInOut',
             }}
@@ -177,11 +271,15 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
             👆
           </motion.div>
           <motion.p
-            className="absolute bottom-20 text-white text-sm font-bold bg-black/70 px-4 py-2 rounded-lg"
-            animate={{ opacity: [0.5, 1, 0.5] }}
+            className="absolute bottom-24 text-sm font-medium px-4 py-2 rounded-full"
+            style={{
+              background: 'var(--color-bg-surface)',
+              color: 'var(--color-text-medium)'
+            }}
+            animate={{ opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
-            ← 左右にスワイプ →
+            ← スワイプして選択 →
           </motion.p>
         </motion.div>
       )}
@@ -202,7 +300,6 @@ const SwipeCard = () => {
   const { currentMode, currentCard, hasSeenSwipeTutorial } = useGameStore();
 
   useEffect(() => {
-    // Initialize scenario manager
     getScenarioManager();
   }, []);
 
@@ -213,30 +310,44 @@ const SwipeCard = () => {
 
   if (currentMode !== 'exploration' || !currentCard) {
     return (
-      <div className="w-full h-full flex items-center justify-center text-gunma-text opacity-50">
+      <div className="w-full h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-sm mb-2">[探索モードでカードを表示]</div>
-          <div className="text-xs opacity-60">スワイプしてイベントを処理</div>
+          <motion.div
+            className="text-sm mb-2"
+            style={{ color: 'var(--color-text-medium)' }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            探索モードでカードを表示
+          </motion.div>
+          <div
+            className="text-xs"
+            style={{ color: 'var(--color-text-low)' }}
+          >
+            スワイプしてイベントを処理
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full relative flex items-center justify-center p-4">
-      {/* Static Arrow Guides (show during tutorial) */}
+    <div className="w-full h-full relative flex items-center justify-center p-6">
+      {/* Subtle Arrow Guides (tutorial only) */}
       {!hasSeenSwipeTutorial && currentCard.type !== 'story' && (
         <>
           <motion.div
-            className="absolute left-2 top-1/2 -translate-y-1/2 text-red-400 text-3xl font-bold z-40"
-            animate={{ opacity: [0.3, 1, 0.3], x: [-5, 0, -5] }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold z-40"
+            style={{ color: 'var(--color-accent-red)' }}
+            animate={{ opacity: [0.2, 0.6, 0.2], x: [-3, 0, -3] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
             ◀
           </motion.div>
           <motion.div
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-green-400 text-3xl font-bold z-40"
-            animate={{ opacity: [0.3, 1, 0.3], x: [5, 0, 5] }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-2xl font-bold z-40"
+            style={{ color: 'var(--color-accent-primary)' }}
+            animate={{ opacity: [0.2, 0.6, 0.2], x: [3, 0, 3] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           >
             ▶
