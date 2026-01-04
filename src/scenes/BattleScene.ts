@@ -442,7 +442,7 @@ export class BattleScene extends Phaser.Scene {
 
     state.setDiceResults(results);
     soundManager.playSe('win');
-    hapticsManager.mediumImpact();
+    hapticsManager.heavyImpact(); // Enhanced "juice" on stop
 
     // Process damage after a short delay so player can see the dice
     this.time.delayedCall(800, () => {
@@ -459,7 +459,36 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private processPlayerAttack(results: number[]) {
-    const damage = this.battleSystem.processPlayerAttack(results);
+    const state = useGameStore.getState();
+    const targetSymbol = state.targetSymbol;
+
+    // Check for target match (Sniper Slot bonus)
+    const targetMatches = targetSymbol ? results.filter(r => r === targetSymbol).length : 0;
+    const hasSniperBonus = targetMatches > 0;
+
+    // Calculate base damage
+    let damage = this.battleSystem.processPlayerAttack(results);
+
+    // Apply 2x bonus for target match
+    if (hasSniperBonus) {
+      const bonusMultiplier = 1 + (targetMatches * 0.5); // +50% per match, so 1 match = 1.5x, 2 = 2x
+      damage = Math.floor(damage * bonusMultiplier);
+
+      // Visual feedback for sniper hit
+      state.addLog(`> 🎯 TARGET HIT! x${targetMatches} (${Math.round(bonusMultiplier * 100)}% ダメージ)`, 'critical');
+
+      // Flash the target text
+      if (this.targetText) {
+        this.tweens.add({
+          targets: this.targetText,
+          scaleX: 1.5,
+          scaleY: 1.5,
+          duration: 100,
+          yoyo: true,
+          repeat: 2
+        });
+      }
+    }
 
     // Check for critical based on results
     const isAllSame = results.length > 1 && results.every(r => r === results[0]);
@@ -470,19 +499,28 @@ export class BattleScene extends Phaser.Scene {
     const enemyX = this.enemySprite?.x || 0;
     const enemyY = this.enemySprite?.y || 0;
 
-    useGameStore.getState().addFloatingText({
+    state.addFloatingText({
       value: damage,
       x: enemyX,
       y: enemyY,
-      type: (isAllSame || hasSixMatch) ? 'critical' : 'damage'
+      type: (isAllSame || hasSixMatch || hasSniperBonus) ? 'critical' : 'damage'
     });
 
     if (isAllSame || hasSixMatch) {
-      useGameStore.getState().triggerCriticalFlash();
+      state.triggerCriticalFlash();
       hapticsManager.heavyImpact();
       this.createLightningEffect();
+    } else if (hasSniperBonus) {
+      hapticsManager.heavyImpact();
     } else {
       hapticsManager.mediumImpact();
+    }
+
+    // Generate new target for next turn
+    const newTarget = Phaser.Math.Between(1, 6);
+    state.setTargetSymbol(newTarget);
+    if (this.targetText) {
+      this.targetText.setText(`🎯 TARGET: [ ${newTarget} ]`);
     }
   }
 
