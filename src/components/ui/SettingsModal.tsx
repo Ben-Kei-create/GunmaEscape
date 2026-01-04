@@ -191,20 +191,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                                 🔧 リール改造
                             </button>
 
-                            {/* Meme Maker Button */}
-                            <button
-                                onClick={() => {
-                                    soundManager.playSe('menu_open');
-                                    window.dispatchEvent(new CustomEvent('openMemeMaker'));
-                                    onClose();
-                                }}
-                                className="w-full py-3 bg-pink-900/30 border border-pink-500/50 rounded-lg
-                                         text-pink-400 font-mono text-sm
-                                         hover:bg-pink-900/50 hover:border-pink-500
-                                         active:scale-95 transition-all duration-150"
-                            >
-                                🖼️ ミームメーカー
-                            </button>
+                            {/* Meme Maker removed */}
 
                             <button
                                 onClick={() => {

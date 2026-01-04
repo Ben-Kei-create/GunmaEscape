@@ -77,7 +77,12 @@ const TypewriterLog = () => {
             className="w-full h-32 overflow-y-auto bg-black/80 border-l-2 border-gunma-accent/50 px-2 py-1 log-scrollbar rounded"
             style={{ scrollBehavior: 'smooth' }}
         >
-            <div className="space-y-0.5 font-mono text-xs">
+            {/* ▼ 修正箇所：フォントサイズと折り返し設定を変更しました
+               text-[10px]: フォントサイズを10pxに強制
+               leading-tight: 行間を詰める
+               break-all: 長い単語を強制的に改行してUI崩れを防ぐ
+            */}
+            <div className="space-y-0.5 font-mono text-[10px] leading-tight break-all">
                 {/* Older logs (displayed instantly) */}
                 {olderLogs.map((log, index) => (
                     <div

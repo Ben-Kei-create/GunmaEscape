@@ -77,3 +77,4 @@ const HealthBar = () => {
 };
 
 export default HealthBar;
+

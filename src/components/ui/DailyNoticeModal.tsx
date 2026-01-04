@@ -4,10 +4,15 @@ import { useGameStore } from '../../stores/gameStore';
 import { soundManager } from '../../systems/SoundManager';
 import { hapticsManager } from '../../systems/HapticsManager';
 
+/**
+ * Daily Login Notice Modal
+ * Shows once per day with a small reward
+ * SIMPLIFIED: No typewriter animation to prevent freezes
+ */
 const DailyNoticeModal = () => {
     const { lastLoginDate, setLastLoginDate, addItem, addLog } = useGameStore();
     const [isOpen, setIsOpen] = useState(false);
-    const [displayText, setDisplayText] = useState('');
+
     const fullText = `群馬県境対策本部より通達
 
 各位殿
@@ -21,44 +26,20 @@ const DailyNoticeModal = () => {
 
 以上、群馬県境対策本部`;
 
-    // Check Date Logic
+    // Check Date on Mount ONLY
     useEffect(() => {
         const today = new Date().toDateString();
-        // Only run this check once on mount
         if (lastLoginDate !== today) {
             setIsOpen(true);
             setLastLoginDate(today);
         }
-    }, []); // Check only on mount
-
-    // Animation Logic
-    useEffect(() => {
-        if (!isOpen) return;
-
-        // Reset text when opening
-        setDisplayText('');
-
-        let index = 0;
-        const interval = setInterval(() => {
-            if (index < fullText.length) {
-                setDisplayText(fullText.slice(0, index + 1));
-                index++;
-            } else {
-                clearInterval(interval);
-            }
-        }, 30);
-
-        return () => clearInterval(interval);
-    }, [isOpen]); // Run when isOpen changes
+    }, []);
 
     const handleClaim = () => {
-        // Grant reward
         addItem('yakimanju');
         addLog('> 本日の配給を受け取った', 'heal');
-
         soundManager.playSe('equip');
         hapticsManager.mediumImpact();
-
         setIsOpen(false);
     };
 
@@ -70,7 +51,7 @@ const DailyNoticeModal = () => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4"
-                    onClick={() => { }} // Prevent close on backdrop click - must claim
+                    onClick={() => { }} // Must click button to close
                 >
                     <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -97,32 +78,22 @@ const DailyNoticeModal = () => {
                             <p className="text-sm mt-1 text-gray-700">群馬県境対策本部</p>
                         </div>
 
-                        {/* Content with typewriter */}
-                        <div
-                            className="mb-6 min-h-[300px] cursor-pointer active:opacity-80 transition-opacity"
-                            onClick={() => setDisplayText(fullText)}
-                        >
-                            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900 pointer-events-none">
-                                {displayText}
+                        {/* Content - INSTANT DISPLAY (No Animation) */}
+                        <div className="mb-6 min-h-[200px]">
+                            <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900">
+                                {fullText}
                             </pre>
-                            {displayText.length < fullText.length && (
-                                <div className="mt-2 text-center text-xs text-gray-400 animate-pulse">
-                                    (タップしてスキップ)
-                                </div>
-                            )}
                         </div>
 
-                        {/* Claim Button */}
+                        {/* Claim Button - ALWAYS ENABLED */}
                         <motion.button
                             onClick={handleClaim}
-                            disabled={displayText.length < fullText.length}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className="w-full py-4 bg-red-900 text-white font-black text-lg
-                         rounded shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-                         border-2 border-red-700"
+                         rounded shadow-lg border-2 border-red-700"
                         >
-                            {displayText.length < fullText.length ? '読み込み中...' : '配給を受領する'}
+                            配給を受領する
                         </motion.button>
 
                         {/* Footer Note */}

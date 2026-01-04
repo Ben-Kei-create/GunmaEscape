@@ -27,7 +27,7 @@ import ScenarioMap from './components/ui/ScenarioMap';
 import DailyNoticeModal from './components/ui/DailyNoticeModal';
 import ProfileScreen from './components/ui/ProfileScreen';
 import ReelTuningScreen from './components/ui/ReelTuningScreen';
-import MemeMaker from './components/ui/MemeMaker';
+// MemeMaker removed per user request
 import TypewriterLog from './components/ui/TypewriterLog';
 import BattleResultBanner from './components/ui/BattleResultBanner';
 import RespectRoulette from './components/battle/RespectRoulette';
@@ -48,7 +48,7 @@ function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isReelTuningOpen, setIsReelTuningOpen] = useState(false);
-  const [isMemeMakerOpen, setIsMemeMakerOpen] = useState(false);
+
   const [tutorialStep, setTutorialStep] = useState<'tap' | 'swipe' | 'none'>('none');
 
   const handleModalUse = () => {
@@ -132,16 +132,16 @@ function App() {
   useEffect(() => {
     const handleProfileOpen = () => setIsProfileOpen(true);
     const handleReelTuningOpen = () => setIsReelTuningOpen(true);
-    const handleMemeMakerOpen = () => setIsMemeMakerOpen(true);
+
 
     window.addEventListener('openProfile', handleProfileOpen);
     window.addEventListener('openReelTuning', handleReelTuningOpen);
-    window.addEventListener('openMemeMaker', handleMemeMakerOpen);
+
 
     return () => {
       window.removeEventListener('openProfile', handleProfileOpen);
       window.removeEventListener('openReelTuning', handleReelTuningOpen);
-      window.removeEventListener('openMemeMaker', handleMemeMakerOpen);
+
     };
   }, []);
 
@@ -308,7 +308,7 @@ function App() {
 
         {/* Phase 38: Reel Tuning & Meme Maker */}
         <ReelTuningScreen isOpen={isReelTuningOpen} onClose={() => setIsReelTuningOpen(false)} />
-        <MemeMaker isOpen={isMemeMakerOpen} onClose={() => setIsMemeMakerOpen(false)} />
+        {/* MemeMaker removed */}
 
         {/* Phase 41: Battle Result Banner & Village */}
         <BattleResultBanner />

@@ -102,11 +102,11 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
       whileDrag={isStory ? {} : { scale: 1.05 }}
     >
       <div className="w-full h-full bg-gunma-konnyaku border-2 border-gunma-accent/50 rounded-xl glass p-6 flex flex-col shadow-2xl">
-        <div className="text-gunma-accent text-sm mb-2 font-bold tracking-wider">
+        <div className="text-gunma-accent text-xs mb-1 font-bold tracking-wider">
           [{card.type.toUpperCase()}]
         </div>
-        <h3 className="text-gunma-text text-2xl font-bold mb-4 leading-tight">{card.title}</h3>
-        <p className="text-gunma-text text-base leading-relaxed opacity-90 flex-1 mb-4 whitespace-pre-wrap">
+        <h3 className="text-gunma-text text-base font-bold mb-2 leading-tight">{card.title}</h3>
+        <p className="text-gunma-text text-xs leading-relaxed opacity-90 flex-1 mb-2 whitespace-pre-wrap overflow-y-auto scrollbar-thin">
           {card.text || card.description}
         </p>
 
