@@ -11,12 +11,12 @@ import { useState } from 'react';
 const SwiftUIFooter = () => {
     const { logs, setInventoryOpen, openCollection } = useGameStore();
     const [isLogHistoryOpen, setLogHistoryOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState<string | null>(null);
+    // const [activeTab, setActiveTab] = useState<string | null>(null);
 
     const handleMenuClick = (action: string) => {
         soundManager.playSe('button_click');
         hapticsManager.lightImpact();
-        setActiveTab(action);
+        // setActiveTab(action);
 
         switch (action) {
             case 'bag':
@@ -31,7 +31,7 @@ const SwiftUIFooter = () => {
         }
 
         // Reset active state after animation
-        setTimeout(() => setActiveTab(null), 200);
+        // setTimeout(() => setActiveTab(null), 200);
     };
 
     const handleLogOpen = () => {
@@ -40,74 +40,57 @@ const SwiftUIFooter = () => {
         setLogHistoryOpen(true);
     };
 
-    const menuItems = [
-        { id: 'map', icon: '🗺️', label: 'MAP' },
-        { id: 'bag', icon: '🎒', label: 'BAG' },
-        { id: 'legacy', icon: '🃏', label: 'LEGACY' }
-    ];
+    // const menuItems = [
+    //     { id: 'map', icon: '🗺️', label: 'MAP' },
+    //     { id: 'bag', icon: '🎒', label: 'BAG' },
+    //     { id: 'legacy', icon: '🃏', label: 'LEGACY' }
+    // ];
 
     return (
         <>
-            {/* Main Footer Bar - iOS Tab Bar Style */}
-            <motion.div
-                className="absolute left-4 right-4 h-14 z-50 rounded-2xl overflow-hidden flex items-center px-3"
+            {/* Footer Buttons - Independent Round Buttons */}
+            <div
+                className="absolute left-6 right-6 z-50 flex justify-between items-center pointer-events-none"
                 style={{
-                    bottom: 'calc(env(safe-area-inset-bottom, 16px) + 12px)',
-                    background: 'rgba(28, 28, 30, 0.9)',
-                    backdropFilter: 'blur(40px)',
-                    WebkitBackdropFilter: 'blur(40px)',
-                    border: '1px solid rgba(48, 209, 88, 0.2)',
-                    boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4), 0 0 1px rgba(48, 209, 88, 0.2)'
-                }}
-                initial={{ y: 80, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{
-                    type: 'spring',
-                    stiffness: 400,
-                    damping: 30,
-                    delay: 0.1
+                    bottom: 'calc(env(safe-area-inset-bottom, 16px) + 20px)',
                 }}
             >
                 {/* Log Button (Left) */}
                 <motion.button
                     onClick={handleLogOpen}
-                    className="w-12 h-12 flex items-center justify-center rounded-xl"
-                    whileTap={{ scale: 0.92 }}
+                    className="w-16 h-16 flex flex-col items-center justify-center rounded-full pointer-events-auto"
                     style={{
-                        color: 'var(--color-text-medium)'
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(0, 255, 204, 0.3)',
+                        boxShadow: '0 0 20px rgba(0, 255, 204, 0.15)'
                     }}
+                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
                 >
-                    <span className="text-xl">📜</span>
+                    <span className="text-2xl mb-0.5">📖</span>
+                    <span className="text-[10px] font-bold text-[#00FFCC]">ログ</span>
                 </motion.button>
 
-                {/* Spacer */}
-                <div className="flex-1" />
-
-                {/* Menu Buttons (Right) */}
-                <div className="flex items-center gap-1">
-                    {menuItems.map(item => (
-                        <motion.button
-                            key={item.id}
-                            onClick={() => handleMenuClick(item.id)}
-                            className="w-14 h-12 flex flex-col items-center justify-center rounded-xl"
-                            whileTap={{ scale: 0.92 }}
-                            animate={{
-                                backgroundColor: activeTab === item.id
-                                    ? 'rgba(255, 255, 255, 0.1)'
-                                    : 'transparent'
-                            }}
-                        >
-                            <span className="text-lg">{item.icon}</span>
-                            <span
-                                className="text-[9px] font-semibold tracking-wider mt-0.5"
-                                style={{ color: 'var(--color-text-low)' }}
-                            >
-                                {item.label}
-                            </span>
-                        </motion.button>
-                    ))}
-                </div>
-            </motion.div >
+                {/* Menu Button (Right) */}
+                <motion.button
+                    onClick={() => handleMenuClick('bag')}
+                    className="w-16 h-16 flex flex-col items-center justify-center rounded-full pointer-events-auto"
+                    style={{
+                        background: 'rgba(0, 0, 0, 0.4)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(0, 255, 204, 0.3)',
+                        boxShadow: '0 0 20px rgba(0, 255, 204, 0.15)'
+                    }}
+                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                >
+                    <span className="text-2xl mb-0.5">≡</span>
+                    <span className="text-[10px] font-bold text-[#00FFCC]">メニュー</span>
+                </motion.button>
+            </div>
 
             {/* Log History Modal - Apple Sheet Style */}
             <AnimatePresence>

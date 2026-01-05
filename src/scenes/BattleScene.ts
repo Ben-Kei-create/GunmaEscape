@@ -93,7 +93,7 @@ export class BattleScene extends Phaser.Scene {
 
   private createEnemySprite() {
     const { width, height } = this.cameras.main;
-    const enemyContainer = this.add.container(width / 2, height * 0.35);
+    const enemyContainer = this.add.container(width / 2, height * 0.5); // Centered in canvas
 
     const { battleState } = useGameStore.getState();
     const enemyName = battleState?.enemy?.name || '';
@@ -198,30 +198,32 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private updateDiceCount() {
-    const { width, height } = this.cameras.main;
+    // const { width } = this.cameras.main; // Unused
     const { playerDiceCount } = useGameStore.getState();
 
     // Clear existing dice
     this.slotDice.forEach(d => d.destroy());
     this.slotDice = [];
 
-    const diceSize = 80; // Larger size as requested
-    const spacing = 100;
-    const totalWidth = (playerDiceCount - 1) * spacing;
-    const startX = width / 2 - totalWidth / 2;
+    // const diceSize = 80; // Larger size as requested
+    // const spacing = 100;
+    // const totalWidth = (playerDiceCount - 1) * spacing;
+    // const startX = width / 2 - totalWidth / 2;
 
     for (let i = 0; i < playerDiceCount; i++) {
-      // Adjusted Y position to 0.75 to be lower and avoid overlap with enemy
-      const dice = this.createSingleDice(startX + i * spacing, height * 0.75, diceSize, i);
-      this.slotDice.push(dice);
+      // Disable Phaser dice rendering - handled by React Overlay (DiceDisplay.tsx)
+      // const dice = this.createSingleDice(startX + i * spacing, height * 0.75, diceSize, i);
+      // this.slotDice.push(dice);
     }
   }
 
+  // private createSingleDice(x: number, y: number, size: number, index: number): Phaser.GameObjects.Container {
+  /*
   private createSingleDice(x: number, y: number, size: number, index: number): Phaser.GameObjects.Container {
     const container = this.add.container(x, y);
     const { reelDeck } = useGameStore.getState();
     const reelConfig = reelDeck[index];
-
+  
     // Determine color based on reel config
     let bgColor = 0x222222;
     let borderColor = 0x39ff14;
@@ -233,29 +235,29 @@ export class BattleScene extends Phaser.Scene {
       };
       borderColor = colorMap[reelConfig.type] || 0x39ff14;
     }
-
+  
     const bg = this.add.graphics();
     bg.fillStyle(bgColor, 1);
     bg.fillRoundedRect(-size / 2, -size / 2, size, size, 8);
     bg.lineStyle(3, borderColor, 1);
     bg.strokeRoundedRect(-size / 2, -size / 2, size, size, 8);
-
+  
     const text = this.add.text(0, 0, '1', {
       fontSize: '40px',
       fontFamily: 'monospace',
       color: `#${borderColor.toString(16).padStart(6, '0')}`,
       fontStyle: 'bold'
     }).setOrigin(0.5);
-
+  
     // Status Icon (Locked/Slippery)
     const statusText = this.add.text(0, -size / 2 - 20, '', {
       fontSize: '24px',
       align: 'center'
     }).setOrigin(0.5);
-
+  
     // Border Graphics for highlighting (separate from bg)
     const borderGraphics = this.add.graphics();
-
+  
     container.add([bg, text, statusText, borderGraphics]);
     (container as any).numberText = text;
     (container as any).bg = bg;
@@ -263,9 +265,10 @@ export class BattleScene extends Phaser.Scene {
     (container as any).borderGraphics = borderGraphics;
     (container as any).size = size;
     (container as any).reelConfig = reelConfig;
-
+  
     return container;
   }
+  */
 
   private setupStoreListener() {
     this.time.addEvent({

@@ -53,13 +53,31 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+                    style={{ paddingTop: 'calc(env(safe-area-inset-top) + 40px)' }}
                     onClick={handleClose}
                 >
+                    {/* Close Button - Moved further down for iPhone 17 Dynamic Island */}
+                    <button
+                        onClick={handleClose}
+                        className="fixed z-[100] flex items-center justify-center rounded-full bg-black/70 border-2 border-gunma-accent/60 text-gunma-accent hover:text-white hover:bg-black/90 active:scale-90 transition-all"
+                        style={{
+                            top: 'calc(env(safe-area-inset-top) + 48px)',
+                            right: '24px',
+                            width: '48px',
+                            height: '48px',
+                            padding: '16px',
+                            minWidth: '48px',
+                            minHeight: '48px'
+                        }}
+                    >
+                        <span className="text-2xl font-bold">✕</span>
+                    </button>
+
                     <motion.div
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
-                        className="w-[90%] max-w-md bg-gunma-konnyaku border-2 border-gunma-accent rounded-lg p-6"
+                        className="w-[90%] max-w-md bg-gunma-konnyaku border-2 border-gunma-accent rounded-lg p-6 max-h-[80vh] overflow-y-auto relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -67,12 +85,6 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                             <h2 className="text-xl font-bold text-gunma-accent font-mono">
                                 ⚙️ 設定
                             </h2>
-                            <button
-                                onClick={handleClose}
-                                className="text-gunma-accent hover:text-white text-2xl"
-                            >
-                                ✕
-                            </button>
                         </div>
 
                         {/* BGM Volume */}

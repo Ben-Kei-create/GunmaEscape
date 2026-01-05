@@ -11,24 +11,7 @@ interface SwipeCardProps {
   isTop: boolean;
 }
 
-/**
- * Get card accent color based on type
- */
-const getCardAccent = (type: string) => {
-  switch (type) {
-    case 'battle':
-      return 'var(--color-accent-red)';
-    case 'story':
-      return 'var(--color-accent-blue)';
-    case 'treasure':
-    case 'reward':
-      return 'var(--color-accent-yellow)';
-    case 'event':
-      return 'var(--color-accent-orange)';
-    default:
-      return 'var(--color-accent-primary)';
-  }
-};
+
 
 const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
   const x = useMotionValue(0);
@@ -42,7 +25,7 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
   const [isDragging, setIsDragging] = useState(false);
 
   const isStory = card.type === 'story';
-  const accentColor = getCardAccent(card.type);
+  // const accentColor = getCardAccent(card.type); // Unused in new design
 
   const handleDragStart = () => {
     setIsDragging(true);
@@ -73,8 +56,21 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
     }
   };
 
-  const leftLabel = (card as any).choices?.left?.text || '← スキップ';
-  const rightLabel = (card as any).choices?.right?.text || '進む →';
+  // Dynamic labels based on card type or properties
+  const getLeftLabel = () => {
+    if (card.leftText) return card.leftText;
+    if (card.type === 'battle') return '🛡️ 防御/回避';
+    return (card as any).choices?.left?.text || '← スキップ';
+  };
+
+  const getRightLabel = () => {
+    if (card.rightText) return card.rightText;
+    if (card.type === 'battle') return '⚔️ 攻撃';
+    return (card as any).choices?.right?.text || '進む →';
+  };
+
+  const leftLabel = getLeftLabel();
+  const rightLabel = getRightLabel();
 
   // Stack cards (not top)
   if (!isTop) {
@@ -125,74 +121,92 @@ const Card = ({ card, index, onSwipe, isTop }: SwipeCardProps) => {
     >
       {/* Main Card - Glassmorphism Design */}
       <div
-        className="w-full h-full rounded-2xl overflow-hidden flex flex-col relative"
+        className="w-full h-full rounded-3xl overflow-hidden flex flex-col relative"
         style={{
-          background: 'rgba(28, 28, 30, 0.85)',
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 1px rgba(48, 209, 88, 0.3)',
-          border: '1px solid rgba(48, 209, 88, 0.25)'
+          background: 'rgba(0, 0, 0, 0.6)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          boxShadow: '0 0 25px rgba(0, 255, 204, 0.4)',
+          border: '2px solid rgba(0, 255, 204, 0.5)'
         }}
       >
-        {/* Left Accent Border */}
-        <div
-          className="absolute left-0 top-4 bottom-4 w-1 rounded-full"
-          style={{ background: accentColor }}
-        />
-
-        {/* Card Content */}
-        <div className="flex-1 p-6 pl-8 flex flex-col">
-          {/* Type Badge */}
+        {/* Card Image - Top 40% */}
+        {(card as any).image && (
           <div
-            className="inline-flex items-center self-start px-3 py-1 rounded-full mb-4"
+            className="w-full h-[40%] bg-cover bg-center"
             style={{
-              background: `${accentColor}20`,
-              color: accentColor,
+              backgroundImage: `url(${(card as any).image || '/assets/bg/exploration_bg.png'})`,
+              borderTopLeftRadius: '1.5rem',
+              borderTopRightRadius: '1.5rem'
+            }}
+          />
+        )}
+
+        {/* Card Content - Scrollable */}
+        <div className="flex-1 p-6 flex flex-col items-center overflow-y-auto">
+          {/* Type Badge - [STORY] */}
+          <div
+            className="px-3 py-1 rounded-md mb-4"
+            style={{
+              background: '#00FFCC',
+              color: '#000000',
             }}
           >
-            <span className="text-[10px] font-bold tracking-widest uppercase">
-              {card.type}
+            <span className="text-xs font-black tracking-widest uppercase">
+              [{card.type.toUpperCase()}]
             </span>
           </div>
 
           {/* Title */}
           <h3
-            className="text-base font-bold mb-2 leading-tight"
-            style={{ color: 'var(--color-accent-primary)' }}
+            className="text-2xl font-black mb-4 text-center leading-tight drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
+            style={{ color: '#FFFFFF' }}
           >
             {card.title}
           </h3>
 
           {/* Description */}
-          <p
-            className="text-xs leading-relaxed flex-1 whitespace-pre-wrap overflow-y-auto pr-2"
-            style={{
-              color: 'var(--color-text-medium)',
-              scrollbarWidth: 'thin'
-            }}
-          >
-            {card.text || card.description}
-          </p>
+          <div className="w-full px-2">
+            <p
+              className="text-sm leading-relaxed whitespace-pre-wrap text-center font-medium"
+              style={{
+                color: 'rgba(255, 255, 255, 0.9)',
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+              }}
+            >
+              {card.text || card.description}
+            </p>
+          </div>
 
-          {/* Action Hints */}
-          <div className="mt-3 pt-3 border-t" style={{ borderColor: 'rgba(48, 209, 88, 0.15)' }}>
-            {isStory ? (
+          {/* Tap to continue animation */}
+          {isStory && (
+            <div className="mt-auto mb-8">
               <motion.div
-                className="flex items-center justify-center gap-2 text-xs"
-                style={{ color: 'var(--color-accent-primary)' }}
-                animate={{ opacity: [0.5, 1, 0.5] }}
+                className="flex flex-col items-center gap-1"
+                animate={{ y: [0, 5, 0], opacity: [0.7, 1, 0.7] }}
                 transition={{ duration: 2, repeat: Infinity }}
               >
-                <span>▼</span>
-                <span>タップして続ける</span>
+                <span className="text-[10px] font-bold tracking-widest text-[#00FFCC]">
+                  ▼ タップして続ける
+                </span>
+                <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[8px] border-t-[#00FFCC]" />
               </motion.div>
-            ) : (
-              <div className="flex justify-between text-xs font-medium">
-                <span style={{ color: 'var(--color-accent-red)' }}>{leftLabel}</span>
-                <span style={{ color: 'var(--color-accent-primary)' }}>{rightLabel}</span>
+            </div>
+          )}
+
+          {/* Action Hints */}
+          {!isStory && (
+            <div className="w-full flex justify-between px-4 mt-auto mb-6">
+              <div className="text-left">
+                <span className="block text-xs text-gray-400 mb-1">← NO</span>
+                <span style={{ color: 'var(--color-accent-red)', fontWeight: 'bold' }}>{leftLabel}</span>
               </div>
-            )}
-          </div>
+              <div className="text-right">
+                <span className="block text-xs text-gray-400 mb-1">YES →</span>
+                <span style={{ color: 'var(--color-accent-primary)', fontWeight: 'bold' }}>{rightLabel}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -297,7 +311,41 @@ const getScenarioManager = () => {
 };
 
 const SwipeCard = () => {
-  const { currentMode, currentCard, hasSeenSwipeTutorial } = useGameStore();
+  // ALL HOOKS MUST BE CALLED FIRST - before any conditional returns
+  const { currentMode, currentCard, hasSeenSwipeTutorial, setCurrentCard } = useGameStore();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Force-load mechanism: If no card, load scenario data
+  useEffect(() => {
+    // If in exploration mode and no card, force load from scenario
+    if (currentMode === 'exploration' && !currentCard) {
+      setIsLoading(true);
+      console.log('[SwipeCard] No card found, force-loading from scenario...');
+
+      const manager = getScenarioManager();
+
+      // Try to start scenario from beginning
+      try {
+        manager.startScenario('c1_01_intro');
+        console.log('[SwipeCard] Force-loaded initial card via startScenario');
+      } catch (e) {
+        // Fallback: Create emergency placeholder card
+        const fallbackCard: CardEvent = {
+          id: 'emergency_fallback',
+          type: 'story',
+          title: 'グンマー深淵へようこそ',
+          description: '探索を開始します。画面をタップしてください。',
+          text: '探索を開始します。画面をタップしてください。',
+          image: '/assets/bg/exploration_bg.png',
+          next: 'c1_01_intro'
+        };
+        setCurrentCard(fallbackCard);
+        console.log('[SwipeCard] Using fallback card');
+      }
+
+      setTimeout(() => setIsLoading(false), 300);
+    }
+  }, [currentMode, currentCard, setCurrentCard]);
 
   useEffect(() => {
     getScenarioManager();
@@ -308,7 +356,34 @@ const SwipeCard = () => {
     manager.processCardAction(card, direction);
   };
 
-  if (currentMode !== 'exploration' || !currentCard) {
+  // CONDITIONAL RETURNS AFTER ALL HOOKS
+  // Don't render in battle mode
+  if (currentMode === 'battle') {
+    return null;
+  }
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <motion.div
+          className="flex flex-col items-center gap-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="w-12 h-12 rounded-full border-4 border-t-transparent"
+            style={{ borderColor: '#00FFCC', borderTopColor: 'transparent' }}
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          />
+          <span className="text-sm text-[#00FFCC] tracking-widest">読み込み中...</span>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!currentCard) {
     return (
       <div className="w-full h-full flex items-center justify-center">
         <div className="text-center">

@@ -1,9 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Phaser from 'phaser';
 import { useGameStore } from '../../stores/gameStore';
-import { usePlayerStore } from '../../stores/playerStore';
 import { BattleScene } from '../../scenes/BattleScene';
-import { getBackgroundForLocation } from '../../config/assets';
 import { soundManager } from '../../systems/SoundManager';
 
 class BootScene extends Phaser.Scene {
@@ -36,17 +34,22 @@ const GameCanvas = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
   const { currentMode } = useGameStore();
-  const { location } = usePlayerStore();
 
   useEffect(() => {
     if (!gameRef.current || phaserGameRef.current) return;
 
     const config: Phaser.Types.Core.GameConfig = {
-      type: Phaser.AUTO,
+      type: Phaser.CANVAS, // Changed from AUTO to avoid WebGL framebuffer errors
       width: window.innerWidth,
-      height: window.innerHeight * 0.4, // 40vh
+      height: window.innerHeight * 0.5, // 50vh - upper half of screen for monster
       parent: gameRef.current,
-      backgroundColor: getBackgroundForLocation(location).color,
+      backgroundColor: 'transparent', // Transparent so React background shows through
+      transparent: true,
+      render: {
+        antialias: false,
+        pixelArt: true,
+        roundPixels: true
+      },
       physics: {
         default: 'arcade',
         arcade: {
@@ -85,9 +88,9 @@ const GameCanvas = () => {
   return (
     <div
       ref={gameRef}
-      className="w-full h-full crt-scanline"
+      className="w-full h-full"
       style={{
-        backgroundColor: getBackgroundForLocation(location).color,
+        backgroundColor: 'transparent',
         position: 'relative',
       }}
     />

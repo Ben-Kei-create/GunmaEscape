@@ -8,7 +8,7 @@ export interface Dice {
 
 export interface CardEvent {
   id: string;
-  type: 'enemy' | 'item' | 'story' | 'trap';
+  type: 'enemy' | 'item' | 'story' | 'trap' | 'battle'; // Added 'battle'
   title: string;
   description: string;
   text?: string; // Story text for linear scenarios
@@ -16,9 +16,14 @@ export interface CardEvent {
   onSwipeRight?: string; // EffectID (optional for linear scenarios)
   onSwipeLeft?: string; // EffectID (optional for linear scenarios)
   next?: string; // Next scenario ID for linear progression
+  leftNext?: string; // Branching: Next ID for Left Swipe
+  rightNext?: string; // Branching: Next ID for Right Swipe
   enemyId?: string; // Enemy ID for enemy events
   itemGet?: string; // Item to get
   triggerBattleId?: string; // Battle to trigger
+  meta?: any; // For battle intent or other dynamic data
+  leftText?: string; // Custom Label for Left Swipe
+  rightText?: string; // Custom Label for Right Swipe
 }
 
 export interface PlayerState {

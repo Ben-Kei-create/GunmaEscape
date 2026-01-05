@@ -6,6 +6,7 @@ import { getEnemy } from '../config/enemies';
 import { soundManager } from './SoundManager';
 import type { CardEvent } from '../types';
 import chapter1Data from '../assets/data/chapter1.json';
+import legacyCardsData from '../assets/data/legacyCards.json';
 
 export class ScenarioManager {
   private battleSystem: BattleSystem;
@@ -104,13 +105,11 @@ export class ScenarioManager {
     const cardStoreState = this.cardStore.getState();
     if (!cardStoreState.hasCard(cardId)) {
       cardStoreState.addCard(cardId);
-      import('../assets/data/legacyCards.json').then((data) => {
-        const allCards = data.cards as any[];
-        const card = allCards.find(c => c.id === cardId);
-        if (card) {
-          this.addLog(`> 【カード発見】${card.name}を図鑑に登録しました！`, 'story');
-        }
-      });
+      const allCards = legacyCardsData.cards as any[];
+      const card = allCards.find(c => c.id === cardId);
+      if (card) {
+        this.addLog(`> 【カード発見】${card.name}を図鑑に登録しました！`, 'story');
+      }
     }
   }
 
@@ -120,25 +119,56 @@ export class ScenarioManager {
     // Play swipe sound
     soundManager.playSe('button_click');
 
-    // 修正: ストーリータイプなら方向に関わらず次に進む
+    // Battle Card Action (Swipe Battle)
+    if (card.type === 'battle') {
+      console.log(`[ScenarioManager] Processing Battle Swipe: ${direction}`);
+      this.battleSystem.processBattleSwipe(direction, card);
+
+      // After processing, we need to generate specific next card? 
+      // Or does battleSystem update state?
+      // BattleSystem updates HP/Log.
+      // We need to advance the turn.
+      // If battle continues, generate a NEW battle card.
+      const battleState = this.gameStore.getState().battleState;
+      if (battleState?.isActive) {
+        // Battle continues -> Generate new card after short delay
+        setTimeout(() => {
+          const nextCard = this.battleSystem.generateBattleCard();
+          if (nextCard) {
+            this.gameStore.getState().setCurrentCard(nextCard);
+          }
+        }, 600); // Delay for log read / animation
+      }
+      return;
+    }
+
+    // Story / Branching Logic
+    // If explicit left/right next IDs are defined, use them.
+    let nextId = card.next;
+
+    if (direction === 'left' && card.leftNext) {
+      nextId = card.leftNext;
+    } else if (direction === 'right' && card.rightNext) {
+      nextId = card.rightNext;
+    }
+
+    // Story Type
     if (card.type === 'story') {
       if (card.itemGet) {
         this.addLog(`> ${card.itemGet}を入手しました`, 'story');
       }
 
-      if (card.next) {
-        console.log(`[ScenarioManager] Advancing Story to: ${card.next}`);
-        this.advanceToNext(card.next);
+      if (nextId) {
+        console.log(`[ScenarioManager] Advancing Story to: ${nextId}`);
+        this.advanceToNext(nextId);
       } else {
         console.warn('[ScenarioManager] Story card has no next ID');
-        // If it's the ending (next is intentionally null), advanceToNext(null) handles it?
-        // Let's assume null is handled by advanceToNext(null) for chapter complete
-        this.advanceToNext(card.next);
+        this.advanceToNext(nextId);
       }
       return;
     }
 
-    // Enemy events: linear scenario battle trigger
+    // Enemy events: linear scenario battle trigger (Legacy/Intro)
     if (card.type === 'enemy' && card.triggerBattleId) {
       console.log(`[ScenarioManager] Enemy card swiped. Starting battle: ${card.triggerBattleId}`);
       this.startBattle(card);
@@ -197,11 +227,49 @@ export class ScenarioManager {
       return;
     }
 
+    // Play encounter sound effect
+    soundManager.playSe('attack'); // Changed from attack_strong to existing SE
+
+    // Screen flash effect
+    const flashDiv = document.createElement('div');
+    flashDiv.style.cssText = `
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: white;
+      pointer-events: none;
+      animation: encounterFlash 0.3s ease-out;
+    `;
+
+    // Add flash animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes encounterFlash {
+        0% { opacity: 0; }
+        50% { opacity: 0.7; }
+        100% { opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    document.body.appendChild(flashDiv);
+
+    // Remove flash after animation
+    setTimeout(() => {
+      flashDiv.remove();
+    }, 300);
+
     // getEnemy now always returns a valid enemy (with fallback)
     const enemy = getEnemy(enemyId);
 
     this.battleSystem.startBattle(enemy);
     this.addLog(`> ${enemy.name}との戦闘が開始されました！`, 'battle');
+
+    // Generate first battle card immediately
+    const firstBattleCard = this.battleSystem.generateBattleCard();
+    if (firstBattleCard) {
+      this.gameStore.setState({ currentCard: firstBattleCard });
+      console.log('[ScenarioManager] Initial battle card set:', firstBattleCard.id);
+    }
 
     // Log story text if available
     if (card.text) {

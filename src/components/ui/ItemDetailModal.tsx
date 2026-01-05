@@ -29,7 +29,27 @@ const ItemDetailModal = ({ isOpen, item, isEquipped, onClose, onUse }: ItemDetai
                         exit={{ scale: 0.8, opacity: 0, y: 20 }}
                         className="w-full max-w-sm bg-black border-2 border-gunma-accent shadow-[0_0_20px_rgba(57,255,20,0.3)] relative overflow-hidden"
                         onClick={(e) => e.stopPropagation()}
+                        style={{ marginTop: 'calc(env(safe-area-inset-top) + 20px)' }}
                     >
+                        {/* Close Button - Moved further down for iPhone 17 Dynamic Island */}
+                        <button
+                            onClick={() => {
+                                soundManager.playSe('cancel');
+                                onClose();
+                            }}
+                            className="fixed z-[100] flex items-center justify-center rounded-full bg-black/70 border-2 border-gunma-accent/60 text-gunma-accent hover:text-white hover:bg-black/90 active:scale-90 transition-all"
+                            style={{
+                                top: 'calc(env(safe-area-inset-top) + 48px)',
+                                right: '24px',
+                                width: '48px',
+                                height: '48px',
+                                padding: '16px',
+                                minWidth: '48px',
+                                minHeight: '48px'
+                            }}
+                        >
+                            <span className="text-2xl font-bold">✕</span>
+                        </button>
                         {/* Decorative glitch lines */}
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gunma-accent to-transparent opacity-50 animate-pulse" />
                         <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gunma-magenta to-transparent opacity-50 animate-pulse delay-75" />

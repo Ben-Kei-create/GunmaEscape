@@ -403,6 +403,11 @@ class SoundManager {
         // Re-use button click low pitch? Or just menu close
         buffer = this.generateMenuCloseSound();
         break;
+      case 'attack':
+      case 'encounter':
+        // Attack/encounter uses damage sound as fallback
+        buffer = this.generateDamageSound();
+        break;
       case 'heal':
         buffer = this.generateWinSound(); // Re-use win for now
         break;
@@ -441,6 +446,8 @@ class SoundManager {
 }
 
 export const soundManager = SoundManager.getInstance();
+
+
 
 
 

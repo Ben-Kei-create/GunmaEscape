@@ -51,22 +51,34 @@ const ReelTuningScreen = ({ isOpen, onClose }: ReelTuningScreenProps) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[95] bg-black/95 flex flex-col p-4 overflow-y-auto"
+                className="fixed inset-0 z-[95] bg-black/95 flex flex-col px-4 pb-4 overflow-y-auto"
+                style={{ paddingTop: 'calc(env(safe-area-inset-top) + 80px)' }}
             >
-                {/* Header */}
+                {/* Close Button - Moved further down for iPhone 17 Dynamic Island */}
+                <button
+                    onClick={() => {
+                        soundManager.playSe('cancel');
+                        onClose();
+                    }}
+                    className="fixed z-[100] flex items-center justify-center rounded-full bg-black/70 border-2 border-gunma-accent/60 text-gunma-accent hover:text-white hover:bg-black/90 active:scale-90 transition-all"
+                    style={{
+                        top: 'calc(env(safe-area-inset-top) + 48px)',
+                        right: '24px',
+                        width: '48px',
+                        height: '48px',
+                        padding: '16px',
+                        minWidth: '48px',
+                        minHeight: '48px'
+                    }}
+                >
+                    <span className="text-2xl font-bold">✕</span>
+                </button>
+
+                {/* Header Title */}
                 <div className="flex justify-between items-center mb-6 border-b border-gunma-accent/30 pb-4">
                     <h2 className="text-2xl font-black text-gunma-accent font-mono flex items-center gap-2">
                         🔧 REEL TUNING
                     </h2>
-                    <button
-                        onClick={() => {
-                            soundManager.playSe('cancel');
-                            onClose();
-                        }}
-                        className="text-gunma-accent hover:text-white text-2xl"
-                    >
-                        ✕
-                    </button>
                 </div>
 
                 {/* Reel Slots (Garage Style) */}

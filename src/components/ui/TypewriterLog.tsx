@@ -88,7 +88,7 @@ const TypewriterLog = () => {
     return (
         <div
             ref={containerRef}
-            className="w-full px-4 py-3 relative"
+            className="w-full px-2 py-2 relative"
             onClick={handleTap}
         >
             {/* Older Logs (faded) */}
@@ -96,7 +96,7 @@ const TypewriterLog = () => {
                 {olderLogs.map((log, idx) => (
                     <motion.div
                         key={`old-${logs.length - 3 + idx}`}
-                        className="text-xs mb-0.5 font-medium"
+                        className="text-[10px] mb-0.5 font-medium leading-tight"
                         style={{
                             color: getLogColor(log.type),
                             opacity: 0.4
@@ -112,7 +112,7 @@ const TypewriterLog = () => {
 
             {/* Latest Log (full opacity, typewriter) */}
             <motion.div
-                className="text-sm font-medium"
+                className="text-xs font-medium leading-tight"
                 style={{ color: getLogColor(latestLog.type) }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -133,7 +133,7 @@ const TypewriterLog = () => {
             {/* Tap to skip indicator */}
             {isTyping && (
                 <motion.div
-                    className="text-[10px] mt-2 text-right"
+                    className="text-[8px] mt-1 text-right"
                     style={{ color: 'var(--color-text-low)' }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0.3, 0.6, 0.3] }}

@@ -46,18 +46,29 @@ const ProfileScreen = ({ isOpen, onClose }: ProfileScreenProps) => {
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="w-full max-w-2xl bg-gradient-to-br from-gray-900 to-black border-2 border-gunma-accent rounded-lg p-6 shadow-[0_0_30px_rgba(57,255,20,0.3)]"
             >
+                {/* Close Button - Fixed position for iPhone 17 Dynamic Island */}
+                <button
+                    onClick={() => {
+                        soundManager.playSe('cancel');
+                        onClose();
+                    }}
+                    className="fixed z-[100] flex items-center justify-center rounded-full bg-black/70 border-2 border-gunma-accent/60 text-gunma-accent hover:text-white hover:bg-black/90 active:scale-90 transition-all"
+                    style={{
+                        top: 'calc(env(safe-area-inset-top) + 48px)',
+                        right: '24px',
+                        width: '48px',
+                        height: '48px',
+                        padding: '16px',
+                        minWidth: '48px',
+                        minHeight: '48px'
+                    }}
+                >
+                    <span className="text-2xl font-bold">✕</span>
+                </button>
+
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6 border-b border-gunma-accent/30 pb-4">
+                <div className="flex justify-between items-center mb-6 border-b border-gunma-accent/30 pb-4 pt-16">
                     <h2 className="text-2xl font-black text-gunma-accent font-mono">PROFILE</h2>
-                    <button
-                        onClick={() => {
-                            soundManager.playSe('cancel');
-                            onClose();
-                        }}
-                        className="text-gunma-accent hover:text-white text-2xl"
-                    >
-                        ✕
-                    </button>
                 </div>
 
                 {/* Player Card */}
@@ -126,10 +137,10 @@ const ProfileScreen = ({ isOpen, onClose }: ProfileScreenProps) => {
                                     whileHover={isUnlocked ? { scale: 1.02 } : {}}
                                     whileTap={isUnlocked ? { scale: 0.98 } : {}}
                                     className={`w-full text-left p-3 rounded border-2 transition-all ${isEquipped
-                                            ? 'bg-gunma-accent/20 border-gunma-accent'
-                                            : isUnlocked
-                                                ? 'bg-black/40 border-gray-700 hover:border-gunma-accent/50'
-                                                : 'bg-black/20 border-gray-800 opacity-50 cursor-not-allowed'
+                                        ? 'bg-gunma-accent/20 border-gunma-accent'
+                                        : isUnlocked
+                                            ? 'bg-black/40 border-gray-700 hover:border-gunma-accent/50'
+                                            : 'bg-black/20 border-gray-800 opacity-50 cursor-not-allowed'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between">
