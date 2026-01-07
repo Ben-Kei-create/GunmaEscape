@@ -15,6 +15,7 @@ import GunmaTicker from './components/ui/GunmaTicker';
 import InventoryManager from './components/ui/InventoryManager';
 import SwipeCard from './components/ui/SwipeCard';
 import SwiftUIFooter from './components/ui/SwiftUIFooter';
+import CRTOverlay from './components/ui/CRTOverlay';
 import ItemDetailModal from './components/ui/ItemDetailModal';
 import NameEntryModal from './components/ui/NameEntryModal';
 import ScenarioMap from './components/ui/ScenarioMap';
@@ -151,17 +152,14 @@ function App() {
 
   return (
     <>
-      <div
-        className="relative w-full h-screen overflow-hidden font-sans"
-        style={{ background: 'var(--color-bg-base)' }}
-      >
-        {/* Subtle ambient gradient (Apple-style) */}
-        <div
-          className="absolute inset-0 pointer-events-none z-0 opacity-30"
-          style={{
-            background: 'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(48, 209, 88, 0.15) 0%, transparent 60%)'
-          }}
-        />
+      <div className="relative w-full h-screen overflow-hidden bg-gunma-bg font-dotgothic">
+        {/* CRT Overlay & Fog */}
+        <CRTOverlay />
+        <div className="absolute inset-0 pointer-events-none z-0 opacity-20 mix-blend-screen" style={{
+          backgroundImage: 'url(/assets/backgrounds/fog.png)',
+          backgroundSize: '200% 100%',
+          animation: 'fog-slide 60s linear infinite'
+        }} />
 
         {isTitleVisible ? (
           // タイトル画面
@@ -180,7 +178,8 @@ function App() {
                 filter: criticalFlash ? 'invert(1) brightness(1.5)' : 'none',
               }}
             >
-              {/* Clean Background - No matrix effect */}
+              {/* Matrix Background */}
+              <div className="absolute inset-0 matrix-bg pointer-events-none z-0" />
 
               {/* Settings Button (Overlay) */}
               {/* Settings Button (Overlay) - Only show after tutorial */}
@@ -188,12 +187,9 @@ function App() {
                 <button
                   onClick={handleSettingsClick}
                   className="absolute top-[calc(env(safe-area-inset-top)+40px)] right-3 z-50 w-10 h-10 flex items-center justify-center
-                             rounded-full active:scale-90 transition-all duration-150"
-                  style={{
-                    background: 'var(--color-bg-elevated)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--color-text-medium)'
-                  }}
+                             bg-black/50 border border-gunma-accent/50 rounded-full
+                             text-gunma-accent hover:bg-gunma-accent/20 hover:border-gunma-accent
+                             active:scale-90 transition-all duration-150 shadow-neon"
                 >
                   ⚙️
                 </button>
@@ -308,7 +304,10 @@ function App() {
 
                 {/* ============== CENTER: ACTION AREA ============== */}
                 <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
-                  {/* SwipeCard will be handled centrally */}
+                  {/* Allow interactions for SwipeCard */}
+                  <div className="pointer-events-auto w-full h-full pt-[40%] pb-[25%] px-4">
+                    <SwipeCard />
+                  </div>
                 </div>
 
                 {/* 3. Footer: Player Status (Bottom) */}

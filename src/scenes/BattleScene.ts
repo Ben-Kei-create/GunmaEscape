@@ -185,14 +185,17 @@ export class BattleScene extends Phaser.Scene {
     });
 
     // Hover animation
-    this.tweens.add({
-      targets: sprite,
-      y: -15,
-      duration: 2000,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut'
-    });
+    const tweenTarget = sprite || fallbackDisplay;
+    if (tweenTarget) {
+      this.tweens.add({
+        targets: tweenTarget,
+        y: -15,
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
 
     this.enemySprite = enemyContainer;
   }
@@ -398,10 +401,12 @@ export class BattleScene extends Phaser.Scene {
     this.spinTimer = null;
 
     const state = useGameStore.getState();
-    const { reelStatuses } = state;
+    const { reelStatuses, currentDiceValue } = state;
     const results: number[] = this.slotDice.map((dice, index) => {
       const status = reelStatuses[index] || 'normal';
-      let val = Phaser.Math.Between(1, 6);
+      // Use the value from ControlDeck if available/synced, else random (fallback)
+      // Since ControlDeck sets it before 'stopped', it should be consistent.
+      let val = currentDiceValue || Phaser.Math.Between(1, 6);
 
       // Effect Logic
       if (status === 'locked') {
@@ -455,119 +460,77 @@ export class BattleScene extends Phaser.Scene {
     soundManager.playSe('win');
     hapticsManager.heavyImpact(); // Enhanced "juice" on stop
 
-    // Phase 42: Trigger Respect Roulette
-    state.setRouletteActive(true);
-    // Reset result just in case
-    // (Wait, store action sets logic should probably clear it, but let's assume component or store handled it. 
-    // Actually store.setRouletteResult(null) might be needed if not auto-cleared. 
-    // I'll assume current store setup or component mount clears it. 
-    // Wait, component useEffect sets currentNumber=1. Store result persists? 
-    // Let's explicitly clear it here if needed, or rely on component to set it only when stopped.
-    // Ideally we clear it first.)
-    state.setRouletteResult(null as any);
+    // Phase 42: Trigger Respect Roulette - [BYPASS]
+    // Phase 42: Trigger Respect Roulette - [BYPASS]
+    // Due to missing implementation causing infinite loop/crash, we bypass this for now.
+    // state.setRouletteActive(true);
 
-    // Wait for roulette result
-    const checkRoulette = this.time.addEvent({
-      delay: 100,
-      loop: true,
-      callback: () => {
-        const { rouletteResult } = useGameStore.getState();
-        if (rouletteResult !== null) {
-          checkRoulette.destroy();
-          this.processPlayerAttack(results, rouletteResult);
-          state.setSlotState('idle');
-        }
-      }
+    // Directly process attack
+    this.time.delayedCall(500, () => {
+      this.processPlayerAttack(results, 1); // 1 = normal
+      state.setSlotState('idle');
     });
   }
 
   private processPlayerAttack(results: number[], rouletteVal: number = 0) {
     const state = useGameStore.getState();
-    const targetSymbol = state.targetSymbol;
+    const { battleState } = state;
+    if (!battleState || !battleState.enemy) return;
 
-    // Check for target match (Sniper Slot bonus)
-    const targetMatches = targetSymbol ? results.filter(r => r === targetSymbol).length : 0;
-    const hasSniperBonus = targetMatches > 0;
+    // Simple Damage Calculation
+    // Sum of dice * rouletteMultiplier (0.1, 1.0, 2.0 based on 1, normal, 6)
+    const diceSum = results.reduce((a, b) => a + b, 0);
 
-    // Calculate base damage
-    let damage = this.battleSystem.processPlayerAttack(results);
+    // Roulette Multiplier logic (simplified)
+    let multiplier = 1.0;
+    if (rouletteVal === 6) multiplier = 2.0;
+    if (rouletteVal === 1) multiplier = 0.1;
 
-    // Phase 42: Apply Respect Roulette Multiplier
-    let rouletteMultiplier = 1.0;
-    let rouletteMsg = '';
+    let damage = Math.floor(diceSum * multiplier * 20); // Scale up for visibility (HP is usually high)
 
-    if (rouletteVal === 6) {
-      rouletteMultiplier = 2.0;
-      rouletteMsg = 'TRUE RESPECT! (x2)';
-      this.cameras.main.shake(300, 0.02);
-      this.createLightningEffect(); // Extra flair
-    } else if (rouletteVal === 1) {
-      rouletteMultiplier = 0.1;
-      rouletteMsg = 'BAD TIMING... (x0.1)';
-    }
-
-    // Apply multiplier
-    damage = Math.floor(damage * rouletteMultiplier);
-
-    if (rouletteVal !== 0) {
-      state.addLog(`> ${rouletteMsg}`, rouletteVal === 6 ? 'critical' : 'damage');
-    }
-
-    // Apply 2x bonus for target match
-    if (hasSniperBonus) {
-      const bonusMultiplier = 1 + (targetMatches * 0.5); // +50% per match, so 1 match = 1.5x, 2 = 2x
-      damage = Math.floor(damage * bonusMultiplier);
-
-      // Visual feedback for sniper hit
-      state.addLog(`> 🎯 TARGET HIT! x${targetMatches} (${Math.round(bonusMultiplier * 100)}% ダメージ)`, 'critical');
-
-      // Flash the target text
-      if (this.targetText) {
-        this.tweens.add({
-          targets: this.targetText,
-          scaleX: 1.5,
-          scaleY: 1.5,
-          duration: 100,
-          yoyo: true,
-          repeat: 2
-        });
-      }
-    }
-
-    // Check for critical based on results
+    // Critical Hit (Triplet or 6-6)
     const isAllSame = results.length > 1 && results.every(r => r === results[0]);
-    const hasSixMatch = results.filter(r => r === 6).length >= 2;
-
-    this.triggerHitFlash();
-
-    const enemyX = this.enemySprite?.x || 0;
-    const enemyY = this.enemySprite?.y || 0;
-
-    state.addFloatingText({
-      value: damage,
-      x: enemyX,
-      y: enemyY,
-      type: (isAllSame || hasSixMatch || hasSniperBonus) ? 'critical' : 'damage'
-    });
-
-    if (isAllSame || hasSixMatch) {
+    if (isAllSame) {
+      damage *= 2;
       state.triggerCriticalFlash();
       hapticsManager.heavyImpact();
-      this.createLightningEffect();
-    } else if (hasSniperBonus) {
-      hapticsManager.heavyImpact();
-    } else {
-      hapticsManager.mediumImpact();
     }
 
-    // Generate new target for next turn
-    const newTarget = Phaser.Math.Between(1, 6);
-    state.setTargetSymbol(newTarget);
-    if (this.targetText) {
-      this.targetText.setText(`🎯 TARGET: [ ${newTarget} ]`);
-    }
+    // Apply Damage via Store
+    // We need to update the enemy in the store
+    const newHp = Math.max(0, battleState.enemy.hp - damage);
+
+    useGameStore.setState(prev => {
+      if (!prev.battleState || !prev.battleState.enemy) return prev;
+      return {
+        battleState: {
+          ...prev.battleState,
+          enemy: {
+            ...prev.battleState.enemy,
+            hp: newHp
+          }
+        }
+      };
+    });
+
+    state.addLog(`> 攻撃！ ${damage}ダメージを与えた！ (出目:${diceSum})`, 'damage');
+    state.addFloatingText({
+      value: damage,
+      x: this.cameras.main.width / 2, // Centered on enemy usually
+      y: this.cameras.main.height * 0.4,
+      type: isAllSame ? 'critical' : 'damage'
+    });
+
+    if (multiplier === 2.0) state.addLog('> RESPECT ROULETTE! Damage x2!', 'critical');
+    if (multiplier === 0.1) state.addLog('> BAD TIMING... Damage x0.1', 'info');
+
+    // Check Victory
+    // BattleSystem checkBattleEnd listener in update loop will catch this
   }
 
+
+
+  /*
   private triggerHitFlash() {
     if (!this.enemySprite) return;
     this.tweens.add({
@@ -600,24 +563,13 @@ export class BattleScene extends Phaser.Scene {
       onComplete: () => lightning.destroy()
     });
   }
+  */
 
   private processEnemyTurn() {
-    const battleState = this.battleSystem.getCurrentBattleState();
-    if (!battleState?.isActive || battleState.turn !== 'enemy') return;
-
-    const damage = this.battleSystem.processEnemyAttack();
-    useGameStore.getState().addLog(`> 敵の攻撃! ${damage} ダメージを受けた!`, 'damage');
-    useGameStore.getState().triggerScreenShake();
-
-    soundManager.playSe('damage');
-    hapticsManager.vibrate();
-
-    // Check battle end
-    const result = this.battleSystem.checkBattleEnd();
-    if (result) {
-      this.time.delayedCall(1000, () => this.handleBattleEnd(result));
-    }
+    // Legacy method - Enemy turn is now processed via SwipeCard events
+    return;
   }
+
 
   private handleBattleEnd(result: 'victory' | 'defeat') {
     this.battleSystem.endBattle(result);

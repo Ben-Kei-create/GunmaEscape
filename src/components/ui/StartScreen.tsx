@@ -430,6 +430,19 @@ const StartScreen: React.FC = () => {
                                                     CONTINUE
                                                 </button>
                                             )}
+
+                                            {/* DEBUG: Run Test Batch */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); (window as any).GunmaDebug?.startChapter1TestBatch(); }}
+                                                className="w-full py-2 rounded-lg font-bold text-sm tracking-widest transition-all duration-200 active:scale-95 mt-4 opacity-50 hover:opacity-100"
+                                                style={{
+                                                    background: 'rgba(255, 0, 0, 0.1)',
+                                                    border: '1px dashed #FF0000',
+                                                    color: '#FF0000',
+                                                }}
+                                            >
+                                                [DEBUG] RUN TEST BATCH
+                                            </button>
                                         </motion.div>
                                     )}
                                 </>

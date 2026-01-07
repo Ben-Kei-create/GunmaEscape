@@ -6,20 +6,23 @@ export class DebugAutomation {
     private isRunning: boolean = false;
     private intervalId: number | null = null;
     private stepCount: number = 0;
-    private maxSteps: number = 100; // Safety brake
+    private maxSteps: number = 500; // Increased limit
+    private battleTurnWait: number = 0;
 
     startChapter1TestBatch() {
         if (this.isRunning) return;
         this.isRunning = true;
         this.stepCount = 0;
-        console.log('🚀 [DebugAutomation] Starting Chapter 1 Test Batch...');
+        this.battleTurnWait = 0;
+        console.log('🚀 [DebugAutomation] Starting Chapter 1 Test Batch (Full Simulation)...');
 
         // Force start from beginning
         useGameStore.getState().startNewGame();
         useGameStore.getState().setMode('exploration');
 
         // Start loop
-        this.intervalId = window.setInterval(() => this.processStep(), 1500);
+        // We use a faster interval but handle logic states carefully
+        this.intervalId = window.setInterval(() => this.processStep(), 1000);
     }
 
     stop() {
@@ -42,57 +45,64 @@ export class DebugAutomation {
         }
 
         const state = useGameStore.getState();
-        const { currentMode, currentCard, battleState } = state;
+        const { currentMode, currentCard, battleState, slotState } = state;
 
-        console.log(`[DebugAutomation] Step ${this.stepCount}: Mode=${currentMode}, Card=${currentCard?.id || 'null'}`);
+        console.log(`[DebugAutomation] Step ${this.stepCount}: Mode=${currentMode}, Card=${currentCard?.id || 'null'}, Slot=${slotState}`);
 
         // 1. Victory Screen / Game Over
         if (currentMode === 'victory' || currentMode === 'gameover') {
-            console.log('  -> Victory/GameOver screen detected. Clicking through...');
-            // Simulate click
-            // Usually these screens have a "next" or "restart" action.
-            // Victory screen usually returns to exploration automatically or via click.
-            // We can force mode back to exploration if stuck, or trigger the cleanup.
-
-            // If victory, usually we want to proceed.
+            console.log('  -> End screen detected. Returning to exploration...');
             if (currentMode === 'victory') {
-                // Force exploration if it doesn't happen automatically
                 useGameStore.getState().setMode('exploration');
+            } else {
+                // Game Over - restart?
+                console.warn('  -> GAME OVER DETECTED. Restarting...');
+                this.stop();
+                this.startChapter1TestBatch();
             }
             return;
         }
 
-        // 2. Battle Mode
+        // 2. Battle Mode (REAL SIMULATION)
         if (currentMode === 'battle') {
-            if (battleState && battleState.enemy && battleState.enemy.hp > 0) {
-                console.log(`  -> Battle Mode: Fighting ${battleState.enemy.name}. FORCING VICTORY.`);
+            if (!battleState?.isActive || !battleState.enemy) {
+                console.warn('  -> Battle mode active but state invalid??');
+                return;
+            }
 
-                // Instant Kill
+            if (this.battleTurnWait > 0) {
+                this.battleTurnWait--;
+                return;
+            }
 
-                // Apply massive damage to enemy
-                useGameStore.setState(prev => {
-                    if (!prev.battleState || !prev.battleState.enemy) return prev;
-                    return {
-                        battleState: {
-                            ...prev.battleState,
-                            enemy: {
-                                ...prev.battleState.enemy,
-                                hp: 0
-                            }
-                        }
-                    };
-                });
+            // Player Turn Logic
+            if (battleState.turn === 'player') {
+                if (slotState === 'idle') {
+                    console.log('  -> Battle: Starting Spin...');
+                    // Simulate Start Button
+                    useGameStore.getState().setSlotState('spinning');
+                    soundManager.playSe('dice_hit');
+                    this.battleTurnWait = 1; // Wait 1s (1 tick)
+                } else if (slotState === 'spinning') {
+                    console.log('  -> Battle: Stopping Spin...');
+                    // Simulate Stop Button with a Good Roll (4, 5, or 6)
+                    const goodRoll = [4, 5, 6][Math.floor(Math.random() * 3)];
 
-                // Trigger victory logic via ScenarioManager or BattleSystem
-                // Since we can't easily access the private battleSystem instance inside BattleScene, 
-                // we'll use the callback exposed in BattleSystem or just rely on the store update if there's a listener.
-                // But ScenarioManager has an 'onBattleVictory'.
+                    // Direct Store Update (Simulate ControlDeck)
+                    // We need to set state to stopped AND set the dice value
+                    useGameStore.getState().triggerAttack(goodRoll);
 
-                setTimeout(() => {
-                    scenarioManager.onBattleVictory(battleState.enemy!.id);
-                    useGameStore.getState().setMode('victory'); // Show victory screen briefly
-                    soundManager.playSe('win');
-                }, 500);
+                    console.log(`  -> Rolled: ${goodRoll}`);
+                    soundManager.playSe('button_click');
+
+                    // Wait for animation/turn process
+                    this.battleTurnWait = 3;
+                } else if (slotState === 'stopped') {
+                    // Waiting for BattleScene to resolve...
+                    console.log('  -> Battle: Waiting for resolution...');
+                }
+            } else {
+                console.log('  -> Enemie\'s Turn. Waiting...');
             }
             return;
         }
@@ -105,11 +115,25 @@ export class DebugAutomation {
                 return;
             }
 
-            console.log(`  -> Swiping card: ${currentCard.id}`);
-            // Swipe Right for everything in Chapter 1 (linear story)
-            scenarioManager.processCardAction(currentCard, 'right');
+            console.log(`  -> Processing Card: ${currentCard.id} (${currentCard.type})`);
 
-            // Check if we finished
+            // Decision Logic
+            let direction: 'left' | 'right' = 'right';
+
+            // Always fight enemies in this test batch
+            if (currentCard.type === 'enemy') {
+                console.log('  -> Enemy Encounter! Choosing FIGHT (Right).');
+                direction = 'right';
+            }
+            // Story/Event: Right usually continues
+            else {
+                direction = 'right';
+            }
+
+            // Execute Swipe
+            scenarioManager.processCardAction(currentCard, direction);
+
+            // Check completion
             if (currentCard.id === 'c1_ending') {
                 console.log('🎉 [DebugAutomation] Chapter 1 Completed Successfully!');
                 this.stop();

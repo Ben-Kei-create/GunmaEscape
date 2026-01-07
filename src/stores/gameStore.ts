@@ -62,6 +62,8 @@ interface GameStore extends GameState {
   addExp: (amount: number) => void;
   diceResults: number[];
   setDiceResults: (results: number[]) => void;
+  currentDiceValue: number;
+  setCurrentDiceValue: (val: number) => void;
   slotState: 'idle' | 'spinning' | 'stopped';
   setSlotState: (state: 'idle' | 'spinning' | 'stopped') => void;
   // Phase 42: Respect Roulette
@@ -73,7 +75,7 @@ interface GameStore extends GameState {
   reelStatuses: ('normal' | 'slippery' | 'locked')[];
   setReelStatus: (index: number, status: 'normal' | 'slippery' | 'locked') => void;
   resetReelStatuses: () => void;
-  triggerAttack: () => void; // request stop
+  triggerAttack: (diceValue?: number) => void;
   logs: LogEntry[];
   addLog: (message: string, type?: LogEntry['type']) => void;
   clearLogs: () => void;
@@ -205,6 +207,8 @@ export const useGameStore = create<GameStore>()(
         };
       }),
       diceResults: [],
+      currentDiceValue: 1,
+      setCurrentDiceValue: (val) => set({ currentDiceValue: val }),
       slotState: 'idle',
       isRouletteActive: false,
       setRouletteActive: (active) => set({ isRouletteActive: active }),
@@ -384,7 +388,7 @@ export const useGameStore = create<GameStore>()(
       upgradeDiceCount: () => set((state) => ({ playerDiceCount: Math.min(state.playerDiceCount + 1, 5) })),
       setDiceResults: (results) => set({ diceResults: results }),
       setSlotState: (state) => set({ slotState: state }),
-      triggerAttack: () => set({ slotState: 'stopped' }), // Simplified trigger
+      triggerAttack: (diceValue) => set({ slotState: 'stopped', currentDiceValue: diceValue }),
 
       // Phase 35: Battle Interference
       reelStatuses: [],

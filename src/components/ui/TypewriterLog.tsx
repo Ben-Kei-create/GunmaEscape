@@ -1,32 +1,29 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+
 import { useGameStore, type LogEntry } from '../../stores/gameStore';
 
-/**
- * Apple-Style Typewriter Log Display
- * Clean, minimal battle log with fade effect
- */
+const getLogStyle = (type: LogEntry['type'], isOld: boolean) => {
+    const baseStyle = isOld ? 'opacity-50' : '';
 
-const getLogColor = (type: LogEntry['type']) => {
     switch (type) {
         case 'damage':
-            return 'var(--color-accent-red)';
+            return `text-red-400 font-bold ${baseStyle}`;
         case 'heal':
-            return 'var(--color-accent-primary)';
+            return `text-green-400 font-semibold ${baseStyle}`;
         case 'critical':
-            return 'var(--color-accent-yellow)';
+            return `text-gunma-accent font-bold ${isOld ? 'opacity-50' : 'glitch-text'}`;
         case 'victory':
-            return 'var(--color-accent-yellow)';
+            return `text-yellow-400 font-bold text-lg ${baseStyle}`;
         case 'defeat':
-            return 'var(--color-accent-red)';
+            return `text-red-500 font-bold text-lg ${baseStyle}`;
         case 'battle':
-            return 'var(--color-accent-orange)';
+            return `text-orange-400 font-semibold ${baseStyle}`;
         case 'error':
-            return 'var(--color-accent-red)';
-        case 'info':
-            return 'var(--color-accent-blue)';
+            return `text-red-500 font-bold ${baseStyle}`;
+        case 'story':
+            return `text-blue-300 ${baseStyle}`;
         default:
-            return 'var(--color-text-medium)';
+            return `text-gunma-text ${isOld ? 'opacity-40' : 'opacity-90'}`;
     }
 };
 
@@ -36,12 +33,10 @@ const TypewriterLog = () => {
     const [currentLogIndex, setCurrentLogIndex] = useState(-1);
     const [isTyping, setIsTyping] = useState(false);
     const [isSkipped, setIsSkipped] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
 
     // Get latest 3 logs
     const recentLogs = logs.slice(-3);
 
-    // Typewriter effect for the latest log
     useEffect(() => {
         if (logs.length === 0) return;
 
@@ -69,7 +64,6 @@ const TypewriterLog = () => {
         }
     }, [logs, currentLogIndex]);
 
-    // Skip typewriter on tap
     const handleTap = () => {
         if (isTyping && logs.length > 0) {
             setIsSkipped(true);
@@ -78,70 +72,42 @@ const TypewriterLog = () => {
         }
     };
 
-    if (currentMode !== 'battle' || logs.length === 0) {
-        return null;
-    }
+    if (currentMode !== 'battle' || logs.length === 0) return null;
 
     const latestLog = logs[logs.length - 1];
     const olderLogs = recentLogs.slice(0, -1);
 
     return (
         <div
-            ref={containerRef}
-            className="w-full px-2 py-2 relative"
+            className="w-full h-full bg-black/60 border-t-2 border-gunma-accent/30 p-2 font-mono text-sm overflow-hidden relative"
             onClick={handleTap}
         >
-            {/* Older Logs (faded) */}
-            <AnimatePresence>
+            {/* Scanline background only for log area */}
+            <div className="absolute inset-0 pointer-events-none opacity-10"
+                style={{ background: 'linear-gradient(transparent 50%, rgba(57, 255, 20, 0.1) 50%)', backgroundSize: '100% 4px' }} />
+
+            <div className="flex flex-col justify-end h-full relative z-10">
+                {/* Older Logs */}
                 {olderLogs.map((log, idx) => (
-                    <motion.div
-                        key={`old-${logs.length - 3 + idx}`}
-                        className="text-[10px] mb-0.5 font-medium leading-tight"
-                        style={{
-                            color: getLogColor(log.type),
-                            opacity: 0.4
-                        }}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 0.4, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                    >
+                    <div key={`old-${logs.length - 3 + idx}`} className={`mb-1 ${getLogStyle(log.type, true)}`}>
                         {log.message}
-                    </motion.div>
+                    </div>
                 ))}
-            </AnimatePresence>
 
-            {/* Latest Log (full opacity, typewriter) */}
-            <motion.div
-                className="text-xs font-medium leading-tight"
-                style={{ color: getLogColor(latestLog.type) }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-            >
-                {isTyping && !isSkipped ? displayText : latestLog.message}
+                {/* Latest Log with Typewriter */}
+                <div className={`leading-relaxed ${getLogStyle(latestLog.type, false)}`}>
+                    <span className="mr-2 text-gunma-accent">{'>'}</span>
+                    {isTyping && !isSkipped ? displayText : latestLog.message}
+                    {isTyping && !isSkipped && <span className="animate-pulse">_</span>}
+                </div>
 
-                {/* Blinking cursor while typing */}
-                {isTyping && !isSkipped && (
-                    <motion.span
-                        className="inline-block w-0.5 h-4 ml-0.5 align-middle"
-                        style={{ background: getLogColor(latestLog.type) }}
-                        animate={{ opacity: [1, 0, 1] }}
-                        transition={{ duration: 0.8, repeat: Infinity }}
-                    />
+                {/* Skip Indicator */}
+                {isTyping && (
+                    <div className="absolute right-2 bottom-2 text-[10px] text-gunma-accent opacity-50 animate-pulse">
+                        TAP TO SKIP
+                    </div>
                 )}
-            </motion.div>
-
-            {/* Tap to skip indicator */}
-            {isTyping && (
-                <motion.div
-                    className="text-[8px] mt-1 text-right"
-                    style={{ color: 'var(--color-text-low)' }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                >
-                    タップでスキップ ▼
-                </motion.div>
-            )}
+            </div>
         </div>
     );
 };
